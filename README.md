@@ -1,5 +1,5 @@
-# Flappy-bird-python
-A basic Flappy Bird game made in Python
+# Flappy-Bird-AI
+A recreation of Flappy Bird using Pygame and integrating an AI (DRL) agent to play the game.
 
 Assets acquired from https://github.com/zhaolingzhi/FlapPyBird-master | Credits to him
 Flappy Bird recreation credits: https://github.com/LeonMarqs/Flappy-bird-python
