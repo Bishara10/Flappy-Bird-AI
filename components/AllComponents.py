@@ -14,17 +14,22 @@ GROUND_HEIGHT= 100
 
 PIPE_WIDHT = 80
 PIPE_HEIGHT = 500
-PIPE_GAP = 150
+PIPE_GAP = 130
 
 SCORE = 0
 
 wing = 'assets/audio/wing.wav'
 hit = 'assets/audio/hit.wav'
+point = 'assets/audio/point.wav'
 
 pygame.init()
 pygame.mixer.init()
 pygame.font.init()
 font = pygame.font.Font("./assets/flappy-bird-font.ttf", 38)
+
+wing_sound = pygame.mixer.Sound(wing)
+hit_sound = pygame.mixer.Sound(hit)
+point_sound = pygame.mixer.Sound(point)
 
 class Bird(pygame.sprite.Sprite):
 
@@ -105,29 +110,30 @@ class Score():
 
 
 class Reward(pygame.sprite.Sprite):
-    def __init__(self, xpos, ypos):
+    def __init__(self, xpos):
         pygame.sprite.Sprite.__init__(self)
         self.surf = pygame.Surface((3, SCREEN_HEIGHT - GROUND_HEIGHT))
         self.surf.fill((255, 255, 255))
-        # self.surf.set_alpha(0)
+        self.surf.set_alpha(0)  ######### Makes it invisible
           
         self.rect = self.surf.get_rect()
         self.rect[0] = xpos
-        self.rect[1] = SCREEN_HEIGHT - GROUND_HEIGHT
 
         self.mask = pygame.mask.from_surface(self.surf)
 
         self.image = self.surf
 
-        self.xpos = xpos
-        self.ypos = ypos
+        self.initial_xpos = xpos
 
 
     def get_position(self):
-        return (self.xpos, self.ypos)
+        return (self.rect[0], self.rect[1])
     
     def update(self):
         self.rect[0] -= GAME_SPEED
+
+    def reset(self):
+        self.rect[0] = SCREEN_WIDHT * 2
 
 
 class Ground(pygame.sprite.Sprite):
@@ -155,9 +161,7 @@ def get_random_pipes(xpos):
     pipe = Pipe(False, xpos, size)
     pipe_inverted = Pipe(True, xpos, SCREEN_HEIGHT - size - PIPE_GAP)
 
-    # reward object for crossing pipes
-    reward = Reward(xpos + PIPE_WIDHT // 2, 0)
-
+    reward = Reward(xpos + PIPE_WIDHT/2)
 
     return pipe, pipe_inverted, reward
 

@@ -1,10 +1,7 @@
 import pygame, random, time
 from components.AllComponents import *
 from pygame.locals import *
-from math import log10
-
-wing = 'assets/audio/wing.wav'
-hit = 'assets/audio/hit.wav'
+# from math import log10
 
 screen = pygame.display.set_mode((SCREEN_WIDHT, SCREEN_HEIGHT))
 pygame.display.set_caption('Flappy Bird')
@@ -26,12 +23,19 @@ for i in range (2):
 
 
 pipe_group = pygame.sprite.Group()
+reward_group = pygame.sprite.Group()
 for i in range (2):
-    pipes = get_random_pipes(SCREEN_WIDHT * i + 800)
+    pos = SCREEN_WIDHT * i + 400
+    pipes = get_random_pipes(pos)
     pipe_group.add(pipes[0])
     pipe_group.add(pipes[1])
+
     print(pipe_group)
 
+    reward = Reward(pos + PIPE_WIDHT/2)
+    reward_group.add(reward)
+
+ 
 
 clock = pygame.time.Clock()
 
@@ -54,10 +58,6 @@ while begin:
     screen.blit(BACKGROUND, (0, 0))
     screen.blit(BEGIN_IMAGE, (120, 150))
 
-    # ################
-    # reward = Reward(SCREEN_WIDHT/2, 0)
-    # screen.blit(reward.surf, reward.get_position())
-    # ################
 
     if is_off_screen(ground_group.sprites()[0]):
         ground_group.remove(ground_group.sprites()[0])
@@ -80,14 +80,14 @@ while True:
     score = Score()
     display_score = score.update(new_val=SCORE)
 
+
     for event in pygame.event.get():
         if event.type == QUIT:
             pygame.quit()
         if event.type == KEYDOWN:
             if event.key == K_SPACE or event.key == K_UP:
                 bird.bump()
-                pygame.mixer.music.load(wing)
-                pygame.mixer.music.play()
+                pygame.mixer.find_channel().play(wing_sound)
 
 
     screen.blit(BACKGROUND, (0, 0))
@@ -107,13 +107,18 @@ while True:
         pipe_group.add(pipes[0])
         pipe_group.add(pipes[1])
 
+        reward_group.add(pipes[2])
+
     bird_group.update()
     ground_group.update()
     pipe_group.update()
+    reward_group.update()
+
 
     bird_group.draw(screen)
     pipe_group.draw(screen)
     ground_group.draw(screen)
+    reward_group.draw(screen)
 
     screen.blit(display_score, score.pos)
 
@@ -121,9 +126,13 @@ while True:
 
     if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
             pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
-        pygame.mixer.music.load(hit)
-        pygame.mixer.music.play()
+        pygame.mixer.find_channel().play(hit_sound)
         time.sleep(1)
         break
+
+    if (pygame.sprite.groupcollide(bird_group, reward_group, False, False, pygame.sprite.collide_mask)):
+        reward_group.remove(reward_group.sprites()[0])
+        pygame.mixer.find_channel().play(point_sound)
+        SCORE += 1
 
 pygame.quit()
