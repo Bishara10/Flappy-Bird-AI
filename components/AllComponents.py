@@ -36,37 +36,49 @@ class Bird(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.images =  [pygame.image.load('assets/sprites/bluebird-upflap.png').convert_alpha(),
-                        pygame.image.load('assets/sprites/bluebird-midflap.png').convert_alpha(),
-                        pygame.image.load('assets/sprites/bluebird-downflap.png').convert_alpha()]
+        self.images =  [pygame.image.load('assets/sprites/yellowbird-upflap.png').convert_alpha(),
+                        pygame.image.load('assets/sprites/yellowbird-midflap.png').convert_alpha(),
+                        pygame.image.load('assets/sprites/yellowbird-downflap.png').convert_alpha()]
 
         self.speed = SPEED
 
         self.current_image = 0
-        # self.image = pygame.image.load('assets/sprites/bluebird-upflap.png').convert_alpha()
         self.image = self.images[0]
         self.mask = pygame.mask.from_surface(self.image)
 
         self.rect = self.image.get_rect()
         self.rect[0] = SCREEN_WIDHT / 6
-        self.rect[1] = SCREEN_HEIGHT / 2
+        self.rect[1] = SCREEN_HEIGHT / 2.5
+
+        self.current_angle = 0
 
     def update(self):
         self.current_image = (self.current_image + 1) % 3
         self.image = self.images[self.current_image]
+        self.image = pygame.transform.rotate(self.image, 30)
         self.speed += GRAVITY
         if self.speed > 14:
             self.speed = 14
+        self.current_angle -= 4
+        self.image = pygame.transform.rotate(self.image, self.current_angle)
+        # self.rect = self.image.get_rect(center=self.rect.center)
 
         #UPDATE HEIGHT
         self.rect[1] += self.speed
 
     def bump(self):
+        self.current_angle = 30
+        self.image = pygame.transform.rotate(self.image, self.current_angle)
+        # self.rect = self.image.get_rect(center=self.rect.center)
         self.speed = -SPEED
 
     def begin(self):
+        self.rect[0] = SCREEN_WIDHT / 6
+        self.rect[1] = SCREEN_HEIGHT / 2.5
         self.current_image = (self.current_image + 1) % 3
+        self.current_angle = 0
         self.image = self.images[self.current_image]
+        self.image = pygame.transform.rotate(self.image, self.current_angle)
 
 
 
@@ -94,7 +106,6 @@ class Pipe(pygame.sprite.Sprite):
 
     def update(self):
         self.rect[0] -= GAME_SPEED
-
 
 
 class Score():
@@ -151,8 +162,10 @@ class Ground(pygame.sprite.Sprite):
     def update(self):
         self.rect[0] -= GAME_SPEED
 
+
 def is_off_screen(sprite):
     return sprite.rect[0] < -(sprite.rect[2])
+
 
 def get_random_pipes(xpos):
     size = random.randint(100, 300)
@@ -165,3 +178,5 @@ def get_random_pipes(xpos):
 
     return pipe, pipe_inverted, reward
 
+
+    

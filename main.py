@@ -30,8 +30,8 @@ for i in range (2):
     pipe_group.add(pipes[0])
     pipe_group.add(pipes[1])
 
-    print(pipe_group)
-
+    # print(pipe_group)
+ 
     reward = Reward(pos + PIPE_WIDHT/2)
     reward_group.add(reward)
 
@@ -97,7 +97,7 @@ while True:
 
         new_ground = Ground(GROUND_WIDHT - 20)
         ground_group.add(new_ground)
-
+    
     if is_off_screen(pipe_group.sprites()[0]):
         pipe_group.remove(pipe_group.sprites()[0])
         pipe_group.remove(pipe_group.sprites()[0])
@@ -127,12 +127,32 @@ while True:
     if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
             pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
         pygame.mixer.find_channel().play(hit_sound)
-        time.sleep(1)
-        break
+        time.sleep(0.5)
+
+        # restart game scenario
+        pipe_group.empty()
+        reward_group.empty()
+        bird.begin()
+
+        pipe_group = pygame.sprite.Group()
+        reward_group = pygame.sprite.Group()
+        for i in range (2):
+            pos = SCREEN_WIDHT * i + 800
+            pipes = get_random_pipes(pos)
+            pipe_group.add(pipes[0])
+            pipe_group.add(pipes[1])
+
+            # print(pipe_group)
+
+            reward = Reward(pos + PIPE_WIDHT/2)
+            reward_group.add(reward)
+            SCORE = 0
+            
 
     if (pygame.sprite.groupcollide(bird_group, reward_group, False, False, pygame.sprite.collide_mask)):
         reward_group.remove(reward_group.sprites()[0])
         pygame.mixer.find_channel().play(point_sound)
         SCORE += 1
 
-pygame.quit()
+
+
