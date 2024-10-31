@@ -24,8 +24,8 @@ for i in range (2):
 
 pipe_group = pygame.sprite.Group()
 reward_group = pygame.sprite.Group()
-for i in range (2):
-    pos = SCREEN_WIDHT * i + 400
+for i in range (4):
+    pos = 250 * i + 400
     pipes = get_random_pipes(pos)
     pipe_group.add(pipes[0])
     pipe_group.add(pipes[1])
@@ -37,7 +37,7 @@ for i in range (2):
 
  
 
-clock = pygame.time.Clock()
+clock = pygame.time.Clock() 
 
 begin = True
 
@@ -102,7 +102,7 @@ while True:
         pipe_group.remove(pipe_group.sprites()[0])
         pipe_group.remove(pipe_group.sprites()[0])
 
-        pipes = get_random_pipes(SCREEN_WIDHT * 2)
+        pipes = get_random_pipes(SCREEN_WIDHT * 2 + 150)
 
         pipe_group.add(pipes[0])
         pipe_group.add(pipes[1])
@@ -136,16 +136,15 @@ while True:
 
         pipe_group = pygame.sprite.Group()
         reward_group = pygame.sprite.Group()
-        for i in range (2):
-            pos = SCREEN_WIDHT * i + 800
+        for i in range (4):
+            pos = 240 * i + 400
             pipes = get_random_pipes(pos)
             pipe_group.add(pipes[0])
             pipe_group.add(pipes[1])
 
-            # print(pipe_group)
-
             reward = Reward(pos + PIPE_WIDHT/2)
             reward_group.add(reward)
+            
             SCORE = 0
             
 
@@ -153,6 +152,15 @@ while True:
         reward_group.remove(reward_group.sprites()[0])
         pygame.mixer.find_channel().play(point_sound)
         SCORE += 1
+
+    for i in range(len(pipe_group.sprites())):
+        if pipe_group.sprites()[i].rect[0] - bird.rect[0] < 0:
+            print(pipe_group.sprites()[i].rect[0])
+            continue
+
+        d_bottomPipe_bird = pipe_group.sprites()[i].rect[1] - bird.rect[1]
+        d_topPipe_bird = pipe_group.sprites()[i+1].rect[1] - bird.rect[1] 
+        break
 
 
 

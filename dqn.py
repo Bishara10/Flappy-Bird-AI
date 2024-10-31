@@ -24,12 +24,12 @@ class Dqn():
 
         #Extracting transitions from random experiences
         for i, inx in enumerate (np.random.randint(0, lenMemory, size = min(batchSize, lenMemory))):
-            currentState, action, reward, nextState = self.memoey[inx][0] 
+            currentState, action, reward, nextState = self.memory[inx][0] 
             gameOver = self.memory[inx] [1]
 
             # Updating inputs and targets
             inputs[i] = currentState
-            targets[i] = model.predict(currentState[0])
+            targets[i] = model.predict(currentState)[0]
             if gameOver:
                 targets[i][action] = reward
 

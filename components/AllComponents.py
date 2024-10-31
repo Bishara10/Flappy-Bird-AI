@@ -5,16 +5,16 @@ from math import log10
 #VARIABLES
 SCREEN_WIDHT = 400
 SCREEN_HEIGHT = 600
-SPEED = 15
+SPEED = 14
 GRAVITY = 1.9
-GAME_SPEED = 10
+GAME_SPEED = 8
 GROUND_WIDHT = 2 * SCREEN_WIDHT
-GROUND_HEIGHT= 100
+GROUND_HEIGHT= 40
 
 
 PIPE_WIDHT = 80
 PIPE_HEIGHT = 500
-PIPE_GAP = 130
+PIPE_GAP = 120
 
 SCORE = 0
 
@@ -25,7 +25,8 @@ point = 'assets/audio/point.wav'
 pygame.init()
 pygame.mixer.init()
 pygame.font.init()
-font = pygame.font.Font("./assets/flappy-bird-font.ttf", 38)
+font = pygame.font.Font("./assets/flappy-bird-font.ttf", 42)
+font2 = pygame.font.Font("./assets/flappy-bird-font.ttf", 28)
 
 wing_sound = pygame.mixer.Sound(wing)
 hit_sound = pygame.mixer.Sound(hit)
@@ -59,7 +60,8 @@ class Bird(pygame.sprite.Sprite):
         self.speed += GRAVITY
         if self.speed > 14:
             self.speed = 14
-        self.current_angle -= 4
+        self.current_angle = (self.current_angle - 4) if (self.current_angle > -90) else -90
+
         self.image = pygame.transform.rotate(self.image, self.current_angle)
         # self.rect = self.image.get_rect(center=self.rect.center)
 
@@ -71,6 +73,10 @@ class Bird(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.image, self.current_angle)
         # self.rect = self.image.get_rect(center=self.rect.center)
         self.speed = -SPEED
+
+        # make sure bird doesn't fly above the boundaries of the screen
+        if self.rect[1] < 0 :
+            self.rect[1] = 0
 
     def begin(self):
         self.rect[0] = SCREEN_WIDHT / 6
@@ -125,7 +131,7 @@ class Reward(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.surf = pygame.Surface((3, SCREEN_HEIGHT - GROUND_HEIGHT))
         self.surf.fill((255, 255, 255))
-        self.surf.set_alpha(0)  ######### Makes it invisible
+        self.surf.set_alpha(120)  ######### Makes it invisible
           
         self.rect = self.surf.get_rect()
         self.rect[0] = xpos
@@ -174,7 +180,7 @@ def get_random_pipes(xpos):
     pipe = Pipe(False, xpos, size)
     pipe_inverted = Pipe(True, xpos, SCREEN_HEIGHT - size - PIPE_GAP)
 
-    reward = Reward(xpos + PIPE_WIDHT/2)
+    reward = Reward(xpos + PIPE_WIDHT) # was xpos + PIPE_WIDTH/2
 
     return pipe, pipe_inverted, reward
 
