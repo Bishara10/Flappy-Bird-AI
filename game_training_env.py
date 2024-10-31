@@ -12,6 +12,7 @@ gamma = 0.9
 batchSize = 32
 epsilon = 1.
 epsilonDecayRate = 0.995
+train_on_frames = 20  # train model every 5 frames
 
 # Initialize environment, the brain and the experience replay memory
 # 3 inputs: 
@@ -82,7 +83,8 @@ while True:
     # Game loop until game is not over
     gameOver = False
     while not gameOver:
-        clock.tick(2)
+        clock.tick(10)
+        train_on_frames -= 1
 
         score = Score()
         display_score = score.update(new_val=SCORE)
@@ -213,8 +215,11 @@ while True:
 
         # Remeber new experience
         DQN.remember([currentState, action, reward_this_round, nextState], gameOver)
-        inputs, targets = DQN.getBatch(model, batchSize)
-        model.train_on_batch(inputs, targets)
+
+        if train_on_frames == 0:
+            inputs, targets = DQN.getBatch(model, batchSize)
+            model.train_on_batch(inputs, targets)
+            train_on_frames = 20
 
         currentState = nextState
         gotReward = 0 #reset 

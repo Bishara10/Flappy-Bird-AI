@@ -9,7 +9,7 @@ SPEED = 14
 GRAVITY = 1.9
 GAME_SPEED = 8
 GROUND_WIDHT = 2 * SCREEN_WIDHT
-GROUND_HEIGHT= 40
+GROUND_HEIGHT= 60
 
 
 PIPE_WIDHT = 80
@@ -124,6 +124,16 @@ class Score():
         self.score = new_val
         score_disp = font.render(str(new_val), True, (255, 255, 255))
         return score_disp
+    
+
+class TopBoundary(pygame.sprite.Sprite):
+    def __init__(self):
+        pygame.sprite.Sprite.__init__(self)
+        self.surf = pygame.Surface(SCREEN_WIDHT, 1)
+
+        self.rect = self.surf.get_rect()
+        self.rect[0] = 0
+        self.rect[1] = 0
 
 
 class Reward(pygame.sprite.Sprite):
