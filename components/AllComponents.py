@@ -129,11 +129,16 @@ class Score():
 class TopBoundary(pygame.sprite.Sprite):
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
-        self.surf = pygame.Surface(SCREEN_WIDHT, 1)
+        self.surf = pygame.Surface((SCREEN_WIDHT, 1))
+        self.surf.fill((255, 255, 255))
+        self.surf.set_alpha(0)
 
         self.rect = self.surf.get_rect()
-        self.rect[0] = 0
-        self.rect[1] = 0
+
+        self.mask = pygame.mask.from_surface(self.surf)
+
+        # self.rect[0] = 0
+        # self.rect[1] = 0
 
 
 class Reward(pygame.sprite.Sprite):
@@ -141,7 +146,7 @@ class Reward(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.surf = pygame.Surface((3, SCREEN_HEIGHT - GROUND_HEIGHT))
         self.surf.fill((255, 255, 255))
-        self.surf.set_alpha(120)  ######### Makes it invisible
+        self.surf.set_alpha(0)  ######### Makes it invisible
           
         self.rect = self.surf.get_rect()
         self.rect[0] = xpos

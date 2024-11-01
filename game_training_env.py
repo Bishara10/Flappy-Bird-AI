@@ -4,6 +4,7 @@ from pygame.locals import *
 from dqn import Dqn
 from brain import Brain
 import numpy as np
+from datetime import datetime 
 
 # Parameters
 learningRate = 0.001
@@ -47,6 +48,8 @@ bird_group = pygame.sprite.Group()
 bird = Bird()
 bird_group.add(bird)
 
+log_file = open("log.txt", "+a")
+
 
 ground_group = pygame.sprite.Group()
 for i in range (2):
@@ -67,18 +70,19 @@ for i in range (2):
     reward = Reward(pos + PIPE_WIDHT) # was xpos + PIPE_WIDTH/2
     reward_group.add(reward)
 
-
+top_boundary = TopBoundary()
 
 clock = pygame.time.Clock() 
 
 bird.begin()
 
 # Training loop 
-while True:
+while epoch <= 3000:
     epoch += 1
     currentState = np.zeros((1, 3))
     nextState = currentState
-    gotReward = 0
+    gotReward = False
+    topCollision = False
 
     # Game loop until game is not over
     gameOver = False
@@ -150,6 +154,8 @@ while True:
         screen.blit(display_score, score.pos)
         screen.blit(display_epoch, (SCREEN_WIDHT // 18 - font.get_height() // 2, SCREEN_HEIGHT//20))
 
+        screen.blit(top_boundary.surf, (0, 0))
+
 
         if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
                 pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
@@ -180,7 +186,12 @@ while True:
             reward_group.remove(reward_group.sprites()[0])
             pygame.mixer.find_channel().play(point_sound)
             SCORE += 1
-            gotReward = 1
+            gotReward = True
+
+
+        if (pygame.sprite.collide_mask(bird, top_boundary)):
+            topCollision = True
+
 
         pygame.display.update()
 
@@ -208,8 +219,8 @@ while True:
             reward_this_round = 1
         elif gameOver:
             reward_this_round = -1
-        # elif touched_top_screen: 
-            # reward_this_round = -0.5
+        elif topCollision: 
+            reward_this_round = -0.5
         else:
             reward_this_round = 0.1
 
@@ -222,17 +233,17 @@ while True:
             train_on_frames = 20
 
         currentState = nextState
-        gotReward = 0 #reset 
+        gotReward = False #reset 
         totReward += reward_this_round
 
     brain.save_weights()
     epsilon *= epsilonDecayRate
     rewards_list.append(totReward)
     totReward = 0
+    log_file.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon}\n")
 
 
-
-
+pygame.quit()
 
 
                 
