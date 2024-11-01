@@ -7,7 +7,7 @@ SCREEN_WIDHT = 400
 SCREEN_HEIGHT = 600
 SPEED = 14
 GRAVITY = 1.9
-GAME_SPEED = 8
+GAME_SPEED = 6
 GROUND_WIDHT = 2 * SCREEN_WIDHT
 GROUND_HEIGHT= 60
 
@@ -146,7 +146,7 @@ class Reward(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.surf = pygame.Surface((3, SCREEN_HEIGHT - GROUND_HEIGHT))
         self.surf.fill((255, 255, 255))
-        self.surf.set_alpha(0)  ######### Makes it invisible
+        self.surf.set_alpha(120)  ######### Makes it invisible
           
         self.rect = self.surf.get_rect()
         self.rect[0] = xpos
@@ -195,7 +195,7 @@ def get_random_pipes(xpos):
     pipe = Pipe(False, xpos, size)
     pipe_inverted = Pipe(True, xpos, SCREEN_HEIGHT - size - PIPE_GAP)
 
-    reward = Reward(xpos + PIPE_WIDHT) # was xpos + PIPE_WIDTH/2
+    reward = Reward(xpos + PIPE_WIDHT/2) # was xpos + PIPE_WIDTH/2 
 
     return pipe, pipe_inverted, reward
 

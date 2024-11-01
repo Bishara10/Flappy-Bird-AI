@@ -28,7 +28,7 @@ while run:
     
     
 
-    pipe = Pipe(False, 0, 100)
+    pipe = Pipe(False, 400   , 100)
     pipesurfmask = pipe.mask.to_surface()
     pipesurfmask.fill((255, 255, 255))
 
