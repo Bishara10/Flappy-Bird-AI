@@ -1,9 +1,10 @@
 import pygame
+from components.AllComponents import *
 
 pygame.init()
 
 font = pygame.font.Font("./assets/flappy-bird-font.ttf", 38)
-screen = pygame.display.set_mode((800, 400))
+screen = pygame.display.set_mode((800, 600))
 
 run = True
 while run:
@@ -15,24 +16,23 @@ while run:
     screen.fill(0)
 
 
-    image = pygame.image.load('assets/sprites/yellowbird-upflap.png').convert_alpha()
-    mymask = pygame.mask.from_surface(image)
+    # image = pygame.image.load('assets/sprites/yellowbird-upflap.png').convert_alpha()
+    # mymask = pygame.mask.from_surface(image)
 
-    masksurf = mymask.to_surface()
+    # masksurf = mymask.to_surface()
 
+    # rectangle = pygame.Surface((100, 100))
+    # rectangle.fill((255, 255, 255))
+    surf = pygame.Surface((10, 10))
+    surf.fill((0, 255, 0))
+    
     
 
+    pipe = Pipe(False, 0, 100)
+    pipesurfmask = pipe.mask.to_surface()
+    pipesurfmask.fill((255, 255, 255))
 
-    rectangle = pygame.Surface((100, 100))
-    rectangle.fill((255, 255, 255))
-
-    screen.blit(rectangle, (400, 200))
-    screen.blit(masksurf, (0, 0))
-
-
-    textsurface=font.render('2', True, (255, 255, 255))
-
-    screen.blit(textsurface, (20, 20))
+    screen.blit(pipesurfmask, pipe.rect)
 
 
     pygame.display.update()

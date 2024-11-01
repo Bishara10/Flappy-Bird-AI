@@ -4,16 +4,17 @@ from pygame.locals import *
 from dqn import Dqn
 from brain import Brain
 import numpy as np
-from datetime import datetime 
+from datetime import datetime
 
 # Parameters
 learningRate = 0.001
 maxMemory = 5000
 gamma = 0.9
-batchSize = 32
+batchSize = 30
 epsilon = 1.
-epsilonDecayRate = 0.995
+epsilonDecayRate = 0.99
 train_on_frames = 20  # train model every 5 frames
+action_flag = 5 # take action every 5 frames
 
 # Initialize environment, the brain and the experience replay memory
 # 3 inputs: 
@@ -48,7 +49,7 @@ bird_group = pygame.sprite.Group()
 bird = Bird()
 bird_group.add(bird)
 
-log_file = open("log.txt", "+a")
+log_file = open(f"./logs/log{datetime.now().strftime('%m-%d--%H-%M')}.txt", "+a")
 
 
 ground_group = pygame.sprite.Group()
@@ -77,7 +78,7 @@ clock = pygame.time.Clock()
 bird.begin()
 
 # Training loop 
-while epoch <= 3000:
+while epoch <= 2200:
     epoch += 1
     currentState = np.zeros((1, 3))
     nextState = currentState
@@ -87,8 +88,9 @@ while epoch <= 3000:
     # Game loop until game is not over
     gameOver = False
     while not gameOver:
-        clock.tick(10)
-        train_on_frames -= 1
+        clock.tick(15)
+        # train_on_frames -= 1
+        action_flag -= 1
 
         score = Score()
         display_score = score.update(new_val=SCORE)
@@ -109,6 +111,11 @@ while epoch <= 3000:
             if event.type == QUIT:
                 brain.save_weights()
                 pygame.quit()
+            
+            if event.type == KEYDOWN:
+                if event.key == K_SPACE:
+                    time.sleep(5)
+
 
             # if event.type == KEYDOWN:
             #     if event.key == K_SPACE or event.key == K_UP:
@@ -116,9 +123,11 @@ while epoch <= 3000:
             #         pygame.mixer.find_channel().play(wing_sound)
 
         #take action
-        print(f"action: {action}")
-        if action == 1:
-            bird.bump()
+        if (action_flag == 0):
+            print(f"action: {action}")
+            if action == 1:
+                bird.bump()
+            action_flag = 5
 
 
         screen.blit(BACKGROUND, (0, 0))
@@ -208,7 +217,8 @@ while epoch <= 3000:
                 continue
 
             d_bottomPipe_bird = pipe_group.sprites()[i].rect[1] - bird.rect[1]
-            d_topPipe_bird = pipe_group.sprites()[i+1].rect[1] - bird.rect[1] 
+            d_topPipe_bird = d_bottomPipe_bird + PIPE_GAP - bird.rect[1]
+            # d_topPipe_bird = pipe_group.sprites()[i+1].rect[1] - bird.rect[1] 
             break
     
         nextState[0] = np.array([d_reward_bird, d_topPipe_bird, d_bottomPipe_bird])
@@ -227,20 +237,21 @@ while epoch <= 3000:
         # Remeber new experience
         DQN.remember([currentState, action, reward_this_round, nextState], gameOver)
 
-        if train_on_frames == 0:
-            inputs, targets = DQN.getBatch(model, batchSize)
-            model.train_on_batch(inputs, targets)
-            train_on_frames = 20
+        # if train_on_frames == 0:
 
         currentState = nextState
         gotReward = False #reset 
         totReward += reward_this_round
 
+    inputs, targets = DQN.getBatch(model, batchSize)
+    model.train_on_batch(inputs, targets)
+    train_on_frames = 20
+
     brain.save_weights()
     epsilon *= epsilonDecayRate
     rewards_list.append(totReward)
-    totReward = 0
     log_file.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon}\n")
+    totReward = 0
 
 
 pygame.quit()
