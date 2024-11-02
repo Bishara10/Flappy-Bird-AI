@@ -14,7 +14,7 @@ GROUND_HEIGHT= 60
 
 PIPE_WIDHT = 80
 PIPE_HEIGHT = 500
-PIPE_GAP = 120
+PIPE_GAP = 130
 
 SCORE = 0
 
@@ -189,13 +189,13 @@ def is_off_screen(sprite):
 
 
 def get_random_pipes(xpos):
-    size = random.randint(100, 300)
+    size = random.randint(100, 350)
 
     # pipes
     pipe = Pipe(False, xpos, size)
     pipe_inverted = Pipe(True, xpos, SCREEN_HEIGHT - size - PIPE_GAP)
 
-    reward = Reward(xpos + PIPE_WIDHT/2) # was xpos + PIPE_WIDTH/2 
+    reward = Reward(xpos + 20) # was xpos + PIPE_WIDTH/2 
 
     return pipe, pipe_inverted, reward
 

@@ -5,7 +5,7 @@ pygame.init()
 
 font = pygame.font.Font("./assets/flappy-bird-font.ttf", 38)
 screen = pygame.display.set_mode((800, 600))
-
+screenhight = 600
 run = True
 while run:
 
@@ -23,16 +23,32 @@ while run:
 
     # rectangle = pygame.Surface((100, 100))
     # rectangle.fill((255, 255, 255))
-    surf = pygame.Surface((10, 10))
-    surf.fill((0, 255, 0))
-    
+
+    # bird = Bird()
+    # bird_point = pygame.Surface((10, 10))
+    # birdpointrect = bird.rect
+    # bird_point.fill((0, 255, 0))
+
+    toppoint = pygame.Surface((10, 10))
+    toppoint.fill((0, 255, 0))
+    botpoint = pygame.Surface((10, 10))
+    botpoint.fill((0, 255, 0))
     
 
     pipe = Pipe(False, 400   , 100)
     pipesurfmask = pipe.mask.to_surface()
     pipesurfmask.fill((255, 255, 255))
 
+    pipetop = Pipe(True, 400 , screenhight - 100 - PIPE_GAP)
+    pipetopsurfmask = pipe.mask.to_surface()
+    pipetopsurfmask.fill((255, 255, 255))
+
     screen.blit(pipesurfmask, pipe.rect)
+    screen.blit(pipetopsurfmask, pipetop.rect)
+    screen.blit(botpoint, pipe.rect)
+    screen.blit(toppoint, (pipe.rect[0], pipe.rect[1] - PIPE_GAP))
+    screen.blit(toppoint, (pipetop.rect[0], pipetop.rect[1] + screenhight - PIPE_GAP))
+
 
 
     pygame.display.update()

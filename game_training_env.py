@@ -8,11 +8,12 @@ from datetime import datetime
 
 # Parameters
 learningRate = 0.001
-maxMemory = 10000
+maxMemory = 50000
 gamma = 0.9
 batchSize = 30
 epsilon = 1.
-epsilonDecayRate = 0.96
+epsilonDecayRate = 0.9995
+epsilonMin = 0.05
 train_on_frames = 20  # train model every 5 frames
 action_flag = 5 # take action every 5 frames
 
@@ -21,13 +22,13 @@ action_flag = 5 # take action every 5 frames
 #     1. horizontal distance from bird to top pipe
 #     2. vertical distance from the top of the bird to the top pipe
 #     3. vertical distance from bottom of the bird to the bottom pipe 
-brain = Brain(3, 2, learningRate)
+brain = Brain(11, 2, learningRate)
 model = brain.model
 DQN = Dqn(maxMemory, gamma)
 
 # main loop
 epoch = 0
-currentState = np.zeros((1, 2))
+currentState = np.zeros((1, 11))
 nextState = currentState
 totReward = 0
 rewards_list = list()
@@ -55,20 +56,20 @@ def prepare_game_scenario():
     ground_group = pygame.sprite.Group()
     for i in range (2):
         ground = Ground(GROUND_WIDHT * i)
-        ground_group.add(ground)
+        ground_group.add(ground) 
 
 
     pipe_group = pygame.sprite.Group()
     reward_group = pygame.sprite.Group()
     for i in range (3):
-        pos = 250 * i + 300
+        pos =  250 * i + 400
         pipes = get_random_pipes(pos)
         pipe_group.add(pipes[0])
         pipe_group.add(pipes[1])
 
         # print(pipe_group)
     
-        reward = Reward(pos + PIPE_WIDHT/2) # was xpos + PIPE_WIDTH/2 might consider deleting it and get it from get_random_pipes
+        reward = Reward(pos + 20) # was xpos + PIPE_WIDTH/2 might consider deleting it and get it from get_random_pipes
         reward_group.add(reward)
 
     top_boundary = TopBoundary()
@@ -87,7 +88,7 @@ bird.begin()
 # Training loop 
 while epoch <= 2200:
     epoch += 1
-    currentState = np.zeros((1, 3))
+    currentState = np.zeros((1, 11))
     nextState = currentState
     gotReward = False
     topCollision = False
@@ -199,46 +200,65 @@ while epoch <= 2200:
             SCORE += 1
             gotReward = True
 
-
         if (pygame.sprite.collide_mask(bird, top_boundary)):
             topCollision = True
 
-
         pygame.display.update()
 
-        # Get state parameter #1: Find distance from the nearest pipes that haven't been crossed.
-        # though i'm trying to find the distance from the nearest pipes, I will find the distance between the bird and the nearest reward
-        # which is "attached" to the pipes
-        d_reward_bird = reward_group.sprites()[0].rect[0] - bird.rect[0]
-        
-        # Get state parameter #2 and #3: distance between top pipe from bird, and the bottom pipe from bird
-        # first find the nearest pipes that haven't been crossed. 
-        for i in range(len(pipe_group.sprites())):
-            if pipe_group.sprites()[i].rect[0] + PIPE_WIDHT - bird.rect[0] < 0:
-                # print(pipe_group.sprites()[i].rect[0])
-                continue
 
-            d_bottomPipe_bird = pipe_group.sprites()[i].rect[1] - bird.rect[1]
-            d_topPipe_bird = d_bottomPipe_bird - PIPE_GAP
+        # Get state parameters, the way they are computed relies on the fact that pipe_group always has 3 pipes
+        # and the game always displays 3 pipes at a time.
+        # Get state parameter #1: Get last pipe horizontal distance from bird
+        lastpipe_x = pipe_group.sprites()[0].rect[0]
+        d_lastPipePos_bird = 0 if lastpipe_x - bird.rect[0] > 0 else lastpipe_x - bird.rect[0]
 
-            # d_topPipe_bird = pipe_group.sprites()[i+1].rect[1] - bird.rect[1] 
-            break
-    
+        # Get state parameter #3: distance between last pipe's bottom from bird
+        lastpipe_bottom_y = pipe_group.sprites()[0].rect[1]
+        d_lastPipeBottom_bird = 0 if d_lastPipePos_bird == 0 else lastpipe_bottom_y - bird.rect[1]
 
+        # Get state parameter #2: distance between last pipe's top from bird
+        d_lastPipeTop_bird = 0 if d_lastPipePos_bird == 0 else lastpipe_bottom_y - PIPE_GAP - d_lastPipeBottom_bird
 
-        nextState[0] = np.array([d_reward_bird, d_topPipe_bird, d_bottomPipe_bird])
-        print(nextState)
+        # Get state parameter #4: distance between next pipe's horizontal distance from bird
+        nextpipe_x = pipe_group.sprites()[2].rect[0]
+        d_nextPipePos_bird = nextpipe_x - bird.rect[0]
+
+        # Get state parameter #6: distance between next pipe's bottom from bird
+        nextpipe_bottom_y = pipe_group.sprites()[2].rect[1] 
+        d_nextPipebottom_bird = nextpipe_bottom_y - bird.rect[1]
+
+        # Get state parameter #5: distance between next pipe's top from bird
+        d_nextPipeTop_bird = nextpipe_bottom_y - PIPE_GAP - d_nextPipebottom_bird
+
+        # Get state parameter #7: distance between next next pipe's horizontal distance from bird
+        nextnextpipe_x = pipe_group.sprites()[4].rect[0]
+        d_nextnextPipePos_bird = nextnextpipe_x - bird.rect[0]
+
+        # Get state parameter #9: distance between next next pipe's bottom from bird
+        nextnexttpipe_bottom_y = pipe_group.sprites()[4].rect[1] 
+        d_nextnextPipebottom_bird = nextnexttpipe_bottom_y - bird.rect[1]
+
+        # Get state parameter #8: distance between next next pipe's top from bird
+        d_nextnextPipeTop_bird =  nextnexttpipe_bottom_y - PIPE_GAP - d_nextnextPipebottom_bird
+
+        # state #10 and #11: bird's vertical position and bird speed
+        # compile state parameters in nextState
+        nextState[0] = np.array([d_lastPipePos_bird, d_lastPipeTop_bird, d_lastPipeBottom_bird, 
+                                d_nextPipePos_bird, d_nextPipeTop_bird, d_nextPipebottom_bird, 
+                                d_nextnextPipePos_bird, d_nextnextPipeTop_bird, d_nextnextPipebottom_bird, 
+                                bird.rect[1], bird.speed])
+        print(nextState[0])
 
         #rewards:
         if gotReward:
-            reward_this_round = 2
+            reward_this_round = 1.1
             reward_group.remove(reward_group.sprites()[0])
         elif gameOver:
             reward_this_round = -1
         elif topCollision: 
             reward_this_round = -0.5
         else:
-            reward_this_round = 0.01
+            reward_this_round = 0.02
 
         # Remeber new experience
         DQN.remember([currentState, action, reward_this_round, nextState], gameOver)
@@ -260,19 +280,19 @@ while epoch <= 2200:
     pipe_group = pygame.sprite.Group()
     reward_group = pygame.sprite.Group()
     for i in range (3):
-        pos = 240 * i + 300
+        pos = 240 * i + 400
         pipes = get_random_pipes(pos)
         pipe_group.add(pipes[0])
         pipe_group.add(pipes[1])
 
-        reward = Reward(pos + PIPE_WIDHT/2) # was xpos + PIPE_WIDTH/2
+        reward = Reward(pos + 20) # was xpos + PIPE_WIDTH/2
         reward_group.add(reward)
         
     SCORE = 0
     action_flag = 5
 
     brain.save_weights()
-    epsilon *= epsilonDecayRate
+    epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
     rewards_list.append(totReward)
     log_file.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon}\n")
     totReward = 0
