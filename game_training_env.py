@@ -8,11 +8,11 @@ from datetime import datetime
 
 # Parameters
 learningRate = 0.001
-maxMemory = 50000
+maxMemory = 100000
 gamma = 0.9
 batchSize = 30
 epsilon = 1.
-epsilonDecayRate = 0.9995
+epsilonDecayRate = 0.996
 epsilonMin = 0.05
 train_on_frames = 20  # train model every 5 frames
 action_flag = 5 # take action every 5 frames
@@ -208,46 +208,36 @@ while epoch <= 2200:
 
         # Get state parameters, the way they are computed relies on the fact that pipe_group always has 3 pipes
         # and the game always displays 3 pipes at a time.
-        # Get state parameter #1: Get last pipe horizontal distance from bird
-        lastpipe_x = pipe_group.sprites()[0].rect[0]
-        d_lastPipePos_bird = 0 if lastpipe_x - bird.rect[0] > 0 else lastpipe_x - bird.rect[0]
+        # Get state parameter #1, #2 and #3: Get last pipe horizontal position and normalize
+        lastpipe_x = pipe_group.sprites()[0].rect[0] / SCREEN_WIDHT
+        lastpipe_bottom_y = pipe_group.sprites()[0].rect[1] / SCREEN_HEIGHT
+        lastpipe_top_y = lastpipe_bottom_y - PIPE_GAP / SCREEN_HEIGHT
 
-        # Get state parameter #3: distance between last pipe's bottom from bird
-        lastpipe_bottom_y = pipe_group.sprites()[0].rect[1]
-        d_lastPipeBottom_bird = 0 if d_lastPipePos_bird == 0 else lastpipe_bottom_y - bird.rect[1]
+        # Get state parameter #4, #5 and #6: Get next pipe horizontal position and normalize
+        nextpipe_x = pipe_group.sprites()[2].rect[0] / SCREEN_WIDHT
+        nextpipe_bottom_y = pipe_group.sprites()[2].rect[1] / SCREEN_HEIGHT
+        nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP / SCREEN_HEIGHT
 
-        # Get state parameter #2: distance between last pipe's top from bird
-        d_lastPipeTop_bird = 0 if d_lastPipePos_bird == 0 else lastpipe_bottom_y - PIPE_GAP - d_lastPipeBottom_bird
+        # Get state parameter #7, #8 and #9: Get next next pipe horizontal position and normalize
+        nextnextpipe_x = pipe_group.sprites()[4].rect[0] / SCREEN_WIDHT
+        nextnextpipe_bottom_y = pipe_group.sprites()[4].rect[1] / SCREEN_HEIGHT
+        nextnextpipe_top_y = nextnextpipe_bottom_y - PIPE_GAP / SCREEN_HEIGHT
 
-        # Get state parameter #4: distance between next pipe's horizontal distance from bird
-        nextpipe_x = pipe_group.sprites()[2].rect[0]
-        d_nextPipePos_bird = nextpipe_x - bird.rect[0]
-
-        # Get state parameter #6: distance between next pipe's bottom from bird
-        nextpipe_bottom_y = pipe_group.sprites()[2].rect[1] 
-        d_nextPipebottom_bird = nextpipe_bottom_y - bird.rect[1]
-
-        # Get state parameter #5: distance between next pipe's top from bird
-        d_nextPipeTop_bird = nextpipe_bottom_y - PIPE_GAP - d_nextPipebottom_bird
-
-        # Get state parameter #7: distance between next next pipe's horizontal distance from bird
-        nextnextpipe_x = pipe_group.sprites()[4].rect[0]
-        d_nextnextPipePos_bird = nextnextpipe_x - bird.rect[0]
-
-        # Get state parameter #9: distance between next next pipe's bottom from bird
-        nextnexttpipe_bottom_y = pipe_group.sprites()[4].rect[1] 
-        d_nextnextPipebottom_bird = nextnexttpipe_bottom_y - bird.rect[1]
-
-        # Get state parameter #8: distance between next next pipe's top from bird
-        d_nextnextPipeTop_bird =  nextnexttpipe_bottom_y - PIPE_GAP - d_nextnextPipebottom_bird
 
         # state #10 and #11: bird's vertical position and bird speed
+        bird_y = bird.rect[1] / SCREEN_HEIGHT
+        bird_speed = bird.speed / MAXSPEED    
+
         # compile state parameters in nextState
-        nextState[0] = np.array([d_lastPipePos_bird, d_lastPipeTop_bird, d_lastPipeBottom_bird, 
-                                d_nextPipePos_bird, d_nextPipeTop_bird, d_nextPipebottom_bird, 
-                                d_nextnextPipePos_bird, d_nextnextPipeTop_bird, d_nextnextPipebottom_bird, 
-                                bird.rect[1], bird.speed])
-        print(nextState[0])
+        nextState[0] = np.array([lastpipe_x, lastpipe_bottom_y, lastpipe_top_y, 
+                                 nextpipe_x, nextpipe_bottom_y, nextpipe_top_y, 
+                                 nextnextpipe_x, nextnextpipe_bottom_y, nextnextpipe_top_y,
+                                bird_y, bird_speed])
+        tst = [lastpipe_x * SCREEN_WIDHT, lastpipe_bottom_y * SCREEN_HEIGHT, lastpipe_top_y * SCREEN_HEIGHT,
+                nextpipe_x * SCREEN_WIDHT, nextpipe_bottom_y * SCREEN_HEIGHT, nextpipe_top_y * SCREEN_HEIGHT,
+                nextnextpipe_x * SCREEN_WIDHT, nextnextpipe_bottom_y * SCREEN_HEIGHT, nextnextpipe_top_y * SCREEN_HEIGHT,
+                bird_y * SCREEN_HEIGHT, bird_speed * MAXSPEED]
+        print(tst)
 
         #rewards:
         if gotReward:
@@ -267,6 +257,7 @@ while epoch <= 2200:
         currentState = nextState
         gotReward = False #reset 
         totReward += reward_this_round
+        print(totReward)
 
     inputs, targets = DQN.getBatch(model, batchSize)
     model.train_on_batch(inputs, targets)

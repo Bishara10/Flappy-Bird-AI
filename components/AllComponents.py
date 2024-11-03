@@ -6,6 +6,7 @@ from math import log10
 SCREEN_WIDHT = 400
 SCREEN_HEIGHT = 600
 SPEED = 14
+MAXSPEED = 14
 GRAVITY = 1.9
 GAME_SPEED = 6
 GROUND_WIDHT = 2 * SCREEN_WIDHT
@@ -58,8 +59,8 @@ class Bird(pygame.sprite.Sprite):
         self.image = self.images[self.current_image]
         self.image = pygame.transform.rotate(self.image, 30)
         self.speed += GRAVITY
-        if self.speed > 14:
-            self.speed = 14
+        if self.speed > MAXSPEED:
+            self.speed = MAXSPEED
         self.current_angle = (self.current_angle - 4) if (self.current_angle > -90) else -90
 
         self.image = pygame.transform.rotate(self.image, self.current_angle)
