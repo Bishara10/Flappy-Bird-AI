@@ -12,7 +12,7 @@ maxMemory = 100000
 gamma = 0.95
 batchSize = 30
 epsilon = 1.
-epsilonDecayRate = 0.995
+epsilonDecayRate = 0.998
 epsilonMin = 0.05
 train_on_frames = 32  # train model every 32 frames
 action_flag = 5 # take action every 5 frames
@@ -73,7 +73,7 @@ def prepare_game_scenario():
 
         # print(pipe_group)
     
-        reward = Reward(pos + 20) # was xpos + PIPE_WIDTH/2 might consider deleting it and get it from get_random_pipes
+        reward = Reward(pos + PIPE_WIDHT/2) # was xpos + PIPE_WIDTH/2 might consider deleting it and get it from get_random_pipes
         reward_group.add(reward)
 
     top_boundary = TopBoundary()
@@ -288,7 +288,7 @@ while True:
         pipe_group.add(pipes[0])
         pipe_group.add(pipes[1])
 
-        reward = Reward(pos + 20) # was xpos + PIPE_WIDTH/2
+        reward = Reward(pos + PIPE_WIDHT/2) # was xpos + PIPE_WIDTH/2
         reward_group.add(reward)
         
     SCORE = 0
