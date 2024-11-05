@@ -33,7 +33,6 @@ while run:
     toppoint.fill((0, 255, 0))
     botpoint = pygame.Surface((10, 10))
     botpoint.fill((0, 255, 0))
-    
 
     pipe = Pipe(False, 400   , 100)
     pipesurfmask = pipe.mask.to_surface()

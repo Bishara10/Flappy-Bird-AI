@@ -7,32 +7,36 @@ import numpy as np
 from datetime import datetime
 
 # Parameters
-learningRate = 0.001
+learningRate = 0.0001
 maxMemory = 100000
-gamma = 0.9
+gamma = 0.95
 batchSize = 30
 epsilon = 1.
-epsilonDecayRate = 0.996
+epsilonDecayRate = 0.995
 epsilonMin = 0.05
-train_on_frames = 20  # train model every 5 frames
+train_on_frames = 32  # train model every 32 frames
 action_flag = 5 # take action every 5 frames
+ddqn_enable = True
 
 # Initialize environment, the brain and the experience replay memory
 # 3 inputs: 
 #     1. horizontal distance from bird to top pipe
 #     2. vertical distance from the top of the bird to the top pipe
 #     3. vertical distance from bottom of the bird to the bottom pipe 
-brain = Brain(11, 2, learningRate)
+brain = Brain(4, 2, learningRate)
 model = brain.model
-DQN = Dqn(maxMemory, gamma)
+DQN = Dqn(maxMemory, gamma, model)
 
 # main loop
 epoch = 0
-currentState = np.zeros((1, 11))
+currentState = np.zeros((1, 4))
 nextState = currentState
 totReward = 0
 rewards_list = list()
-log_file = open(f"./logs/log{datetime.now().strftime('%m-%d--%H-%M')}.txt", "+a")
+log_file = f"./logs/log{datetime.now().strftime('%m-%d--%H-%M')}.txt"
+
+with open(log_file, "+a") as log:
+    log.write(f"Hyperparameters:\nlearningRate = {learningRate}\nmaxMemory = {maxMemory}\ngamma = {gamma}\nbatchSize = {batchSize}\nepsilon = {epsilon}\nepsilonDecayRate = {epsilonDecayRate}\nepsilonMin = {epsilonMin}\nddqn_enable = {ddqn_enable}\n\n")
 
 
 screen = pygame.display.set_mode((SCREEN_WIDHT, SCREEN_HEIGHT))
@@ -86,9 +90,9 @@ bird.begin()
 
 
 # Training loop 
-while epoch <= 2200:
+while True:
     epoch += 1
-    currentState = np.zeros((1, 11))
+    currentState = np.zeros((1, 4))
     nextState = currentState
     gotReward = False
     topCollision = False
@@ -97,7 +101,7 @@ while epoch <= 2200:
     gameOver = False
     while not gameOver:
         clock.tick(30) # was 15 -------------------------------------------------------------------------------
-        # train_on_frames -= 1
+        train_on_frames -= 1
         action_flag -= 1
         action = -1
 
@@ -113,7 +117,7 @@ while epoch <= 2200:
                 # print(action)
 
             else:
-                qvalues = model.predict(currentState)[0] 
+                qvalues = DQN.model.predict(currentState)[0] 
                 action = np.argmax(qvalues)
                 print(f"action: {action}, qvals = {qvalues}")
 
@@ -208,60 +212,68 @@ while epoch <= 2200:
 
         # Get state parameters, the way they are computed relies on the fact that pipe_group always has 3 pipes
         # and the game always displays 3 pipes at a time.
-        # Get state parameter #1, #2 and #3: Get last pipe horizontal position and normalize
-        lastpipe_x = pipe_group.sprites()[0].rect[0] / SCREEN_WIDHT
-        lastpipe_bottom_y = pipe_group.sprites()[0].rect[1] / SCREEN_HEIGHT
-        lastpipe_top_y = lastpipe_bottom_y - PIPE_GAP / SCREEN_HEIGHT
+        # Get state parameter #1, #2 and #3: Get next pipe horizontal position, top and bottom vertical position
+        state_params = []
 
-        # Get state parameter #4, #5 and #6: Get next pipe horizontal position and normalize
-        nextpipe_x = pipe_group.sprites()[2].rect[0] / SCREEN_WIDHT
-        nextpipe_bottom_y = pipe_group.sprites()[2].rect[1] / SCREEN_HEIGHT
-        nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP / SCREEN_HEIGHT
+        chosenpipeindex = 0
+        nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] + PIPE_WIDHT
+        if (nextpipe_x < bird.rect[0]):
+            chosenpipeindex = 2 # if the next pipe is to the left of the bird, choose the right pipe
 
-        # Get state parameter #7, #8 and #9: Get next next pipe horizontal position and normalize
-        nextnextpipe_x = pipe_group.sprites()[4].rect[0] / SCREEN_WIDHT
-        nextnextpipe_bottom_y = pipe_group.sprites()[4].rect[1] / SCREEN_HEIGHT
-        nextnextpipe_top_y = nextnextpipe_bottom_y - PIPE_GAP / SCREEN_HEIGHT
+        # nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0]
+        # nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
+        # nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
 
+        nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] - bird.rect[0]
+        nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
+        nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
 
-        # state #10 and #11: bird's vertical position and bird speed
-        bird_y = bird.rect[1] / SCREEN_HEIGHT
-        bird_speed = bird.speed / MAXSPEED    
+        d_bird_nextpipe_bottom_y = nextpipe_bottom_y - bird.rect[1]
+        d_bird_nextpipe_top_y = bird.rect[1] - nextpipe_top_y
+
+        # state #14 and #5: bird's vertical position and bird speed
+        bird_y = bird.rect[1]
+        bird_speed = bird.speed
+
+        state_params.append(nextpipe_x )
+        state_params.append(d_bird_nextpipe_top_y )
+        state_params.append(d_bird_nextpipe_bottom_y )
+        # state_params.append(bird_y / SCREEN_HEIGHT)
+        state_params.append(bird_speed)
 
         # compile state parameters in nextState
-        nextState[0] = np.array([lastpipe_x, lastpipe_bottom_y, lastpipe_top_y, 
-                                 nextpipe_x, nextpipe_bottom_y, nextpipe_top_y, 
-                                 nextnextpipe_x, nextnextpipe_bottom_y, nextnextpipe_top_y,
-                                bird_y, bird_speed])
-        tst = [lastpipe_x * SCREEN_WIDHT, lastpipe_bottom_y * SCREEN_HEIGHT, lastpipe_top_y * SCREEN_HEIGHT,
-                nextpipe_x * SCREEN_WIDHT, nextpipe_bottom_y * SCREEN_HEIGHT, nextpipe_top_y * SCREEN_HEIGHT,
-                nextnextpipe_x * SCREEN_WIDHT, nextnextpipe_bottom_y * SCREEN_HEIGHT, nextnextpipe_top_y * SCREEN_HEIGHT,
-                bird_y * SCREEN_HEIGHT, bird_speed * MAXSPEED]
-        print(tst)
+        nextState[0] = np.array(state_params)
+        
+
+        tst = [nextpipe_x, d_bird_nextpipe_top_y, d_bird_nextpipe_bottom_y, bird_speed]
 
         #rewards:
         if gotReward:
-            reward_this_round = 1.1
+            reward_this_round = 12
             reward_group.remove(reward_group.sprites()[0])
         elif gameOver:
-            reward_this_round = -1
+            reward_this_round = -10
         elif topCollision: 
-            reward_this_round = -0.5
+            reward_this_round = -5
         else:
-            reward_this_round = 0.02
+            reward_this_round = 0.1
 
         # Remeber new experience
         DQN.remember([currentState, action, reward_this_round, nextState], gameOver)
 
+        if train_on_frames == 0:
+            inputs, targets = DQN.getBatch(batchSize, ddqn=ddqn_enable)
+            DQN.model.train_on_batch(inputs, targets)
+            train_on_frames = 32
 
         currentState = nextState
         gotReward = False #reset 
         totReward += reward_this_round
-        print(totReward)
+        print(tst, totReward)
 
-    inputs, targets = DQN.getBatch(model, batchSize)
-    model.train_on_batch(inputs, targets)
-    train_on_frames = 20
+    # inputs, targets = DQN.getBatch(model, batchSize)
+    # model.train_on_batch(inputs, targets)
+    # train_on_frames = 20
 
     # restart game scenario
     pipe_group.empty()
@@ -285,17 +297,8 @@ while epoch <= 2200:
     brain.save_weights()
     epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
     rewards_list.append(totReward)
-    log_file.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon}\n")
+    with open(log_file, "a") as log:
+        log.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon}\n")
     totReward = 0
-
-
-pygame.quit()
-
-
-                
-
-
-        
-
 
 

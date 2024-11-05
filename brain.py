@@ -8,8 +8,7 @@ class Brain():
         self.learningRate = lr
 
         self.model = keras.models.Sequential()
-        self.model.add(keras.layers.Dense(units=512, activation='relu', input_shape=(self.numInputs, )))
-        # self.model.add(keras.layers.Dense(units=16, activation='relu'))
+        self.model.add(keras.layers.Dense(units=256, activation='relu', input_shape=(self.numInputs, )))
         self.model.add(keras.layers.Dense(units=self.numOutputs))
         self.model.compile(optimizer=keras.optimizers.Adam(learning_rate=self.learningRate), loss='mean_squared_error')
 

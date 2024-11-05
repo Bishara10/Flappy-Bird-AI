@@ -1,10 +1,16 @@
 import numpy as np
+from brain import Brain
 
 class Dqn():
-    def __init__(self, maxMemory, discount):
+    def __init__(self, maxMemory, discount, model):
         self.maxMemory = maxMemory
         self.discount = discount
         self.memory = list()
+
+        self.model = model
+        
+        self.target_dqn = Brain(4, 2, 0.001)
+        self.update_target_dqn()
 
     #Remembering new experience
     def remember (self, transition, gameOver): 
@@ -13,10 +19,10 @@ class Dqn():
             del self.memory[0]
 
     #Getting batches of inputs and targets
-    def getBatch(self, model, batchSize): 
+    def getBatch(self, batchSize, ddqn = False): 
         lenMemory = len(self.memory) 
         numInputs = self.memory[0][0][0].shape[1] 
-        numOutputs = model.output_shape[-1]
+        numOutputs = self.model.output_shape[-1]
 
         #Initializing the inputs and targets
         inputs = np.zeros((min(batchSize, lenMemory), numInputs))
@@ -29,11 +35,23 @@ class Dqn():
 
             # Updating inputs and targets
             inputs[i] = currentState
-            targets[i] = model.predict(currentState)[0]
-            if gameOver:
-                targets[i][action] = reward
+            targets[i] = self.model.predict(currentState)[0]
 
+            if ddqn:
+                best_action = np.argmax(self.model.predict(nextState)[0])
+                if gameOver:
+                    targets[i][action] = reward
+
+                else:
+                    targets[i][action] = reward + self.discount * self.target_dqn.model.predict(nextState)[0][best_action]
             else:
-                targets[i][action] = reward + self.discount * np.max(model.predict(nextState)[0])
+                if gameOver:
+                    targets[i][action] = reward
+
+                else:
+                    targets[i][action] = reward + self.discount * np.max(self.model.predict(nextState)[0])
 
         return inputs, targets
+    
+    def update_target_dqn(self):
+        self.target_dqn.model.set_weights(self.model.get_weights())
