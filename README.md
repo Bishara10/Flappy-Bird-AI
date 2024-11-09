@@ -51,7 +51,7 @@ The model is optimized using the following hyperparameters:
     - **Epsilon Decay Rate**: `0.998`
     - **Minimum Epsilon**: `0.05`
 
-### Installation
+## Installation
 
 1. Clone the repository:
    ```bash
@@ -71,7 +71,7 @@ The model is optimized using the following hyperparameters:
     ```
 
 
-### Usage
+## Usage
 
 1. Training the Model:
   - Modify hyperparameters in config.py if needed.
@@ -80,10 +80,10 @@ The model is optimized using the following hyperparameters:
 2. Testing the Model:
   - After training, run python test.py to observe the agent's performance in the Flappy Bird game.
 
-### Results
+## Results
 
 
-### Future Improvements
+## Future Improvements
 
 Enhanced State Representation: Add additional features, such as distances to upcoming pipes, to help the agent make more informed decisions.
 Prioritized Experience Replay: Implement experience prioritization to sample more valuable experiences for faster convergence.
