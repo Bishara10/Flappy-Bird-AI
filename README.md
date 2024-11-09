@@ -54,22 +54,22 @@ The model is optimized using the following hyperparameters:
 ## Installation
 
 1. Clone the repository:
- ```bash
- git clone https://github.com/your-username/Flappy-Bird-AI-DDQN.git
- cd Flappy-Bird-AI-DDQN
- ```
+   ```bash
+   git clone https://github.com/your-username/Flappy-Bird-AI-DDQN.git
+   cd Flappy-Bird-AI-DDQN
+   ```
 
 2. Install the required dependencies:
-```bash
-pip install -r requirements.txt
-```
+  ```bash
+  pip install -r requirements.txt
+  ```
 
 3. Run the game and train the model:
 
-```bash
-Copy code
-python train.py
-```
+  ```bash
+  Copy code
+  python train.py
+  ```
 
 
 ### Usage
