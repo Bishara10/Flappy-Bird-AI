@@ -31,25 +31,25 @@ This separation allows the agent to make more reliable updates, which leads to m
 
 The **epsilon-greedy strategy** is a method to balance exploration and exploitation during training. The agent chooses random actions with probability `epsilon` to explore new strategies and chooses the best-known action with probability `1 - epsilon` for exploiting the learned strategies.
 
-- **Exploration**: Helps the agent discover new actions and strategies.
-- **Exploitation**: Allows the agent to use known strategies that have led to higher rewards.
+  - **Exploration**: Helps the agent discover new actions and strategies.
+  - **Exploitation**: Allows the agent to use known strategies that have led to higher rewards.
 
 The epsilon value decays over time, reducing the exploration rate as the agent gains experience and learns to make optimal choices.
 
 ## Model Architecture
 
 The model is a simple neural network designed for the agent's decision-making:
-- **Input Layer**: Takes in features such as the bird’s horizontal and vertical distances to the nearest pipes and the bird’s current speed.
-- **Hidden Layer**: A fully connected dense layer with 256 nodes.
-- **Output Layer**: Outputs Q-values for two possible actions: `jump` and `no action`.
+  - **Input Layer**: Takes in features such as the bird’s horizontal and vertical distances to the nearest pipes and the bird’s current speed.
+  - **Hidden Layer**: A fully connected dense layer with 256 nodes.
+  - **Output Layer**: Outputs Q-values for two possible actions: `jump` and `no action`.
 
 The model is optimized using the following hyperparameters:
-- **Learning Rate**: `0.0001`
-- **Discount Factor (gamma)**: `0.95`
-- **Batch Size**: `30`
-- **Memory Size**: `100000`
-- **Epsilon Decay Rate**: `0.998`
-- **Minimum Epsilon**: `0.05`
+  - **Learning Rate**: `0.0001`
+  - **Discount Factor (gamma)**: `0.95`
+  - **Batch Size**: `30`
+  - **Memory Size**: `100000`
+  - **Epsilon Decay Rate**: `0.998`
+  - **Minimum Epsilon**: `0.05`
 
 ## Installation
 
@@ -75,11 +75,11 @@ The model is optimized using the following hyperparameters:
 ### Usage
 
 1. Training the Model:
-- Modify hyperparameters in config.py if needed.
-- Run python train.py to start training the agent.
+  - Modify hyperparameters in config.py if needed.
+  - Run python train.py to start training the agent.
 
 2. Testing the Model:
-- After training, run python test.py to observe the agent's performance in the Flappy Bird game.
+  - After training, run python test.py to observe the agent's performance in the Flappy Bird game.
 
 ### Results
 
