@@ -51,7 +51,7 @@ The model is optimized using the following hyperparameters:
     - **Epsilon Decay Rate**: `0.998`
     - **Minimum Epsilon**: `0.05`
 
-## Installation
+### Installation
 
 1. Clone the repository:
    ```bash
