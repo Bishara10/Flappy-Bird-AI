@@ -27,6 +27,15 @@ The **Double Deep Q-Network (DDQN)** is an improvement over the standard DQN app
 
 This separation allows the agent to make more reliable updates, which leads to more stable training and improved performance.
 
+### Soft Update for Target Network
+
+To maintain stability during training, the **target network** is updated using a **soft update** method. Instead of completely replacing the target network weights with those from the main network, the soft update gradually blends them according to a parameter `tau`. This allows smoother transitions and helps avoid abrupt changes, which can destabilize training.
+
+The update rule for each parameter is:
+   \[
+   \theta_{target} = \tau \times \theta_{main} + (1 - \tau) \times \theta_{target}
+   \]
+
 ### Epsilon-Greedy Strategy
 
 The **epsilon-greedy strategy** is a method to balance exploration and exploitation during training. The agent chooses random actions with probability `epsilon` to explore new strategies and chooses the best-known action with probability `1 - epsilon` for exploiting the learned strategies.
