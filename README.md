@@ -39,17 +39,17 @@ The epsilon value decays over time, reducing the exploration rate as the agent g
 ## Model Architecture
 
 The model is a simple neural network designed for the agent's decision-making:
-  - **Input Layer**: Takes in features such as the bird’s horizontal and vertical distances to the nearest pipes and the bird’s current speed.
-  - **Hidden Layer**: A fully connected dense layer with 256 nodes.
-  - **Output Layer**: Outputs Q-values for two possible actions: `jump` and `no action`.
+    - **Input Layer**: Takes in features such as the bird’s horizontal and vertical distances to the nearest pipes and the bird’s current speed.
+    - **Hidden Layer**: A fully connected dense layer with 256 nodes.
+    - **Output Layer**: Outputs Q-values for two possible actions: `jump` and `no action`.
 
 The model is optimized using the following hyperparameters:
-  - **Learning Rate**: `0.0001`
-  - **Discount Factor (gamma)**: `0.95`
-  - **Batch Size**: `30`
-  - **Memory Size**: `100000`
-  - **Epsilon Decay Rate**: `0.998`
-  - **Minimum Epsilon**: `0.05`
+    - **Learning Rate**: `0.0001`
+    - **Discount Factor (gamma)**: `0.95`
+    - **Batch Size**: `30`
+    - **Memory Size**: `100000`
+    - **Epsilon Decay Rate**: `0.998`
+    - **Minimum Epsilon**: `0.05`
 
 ## Installation
 
@@ -60,25 +60,25 @@ The model is optimized using the following hyperparameters:
    ```
 
 2. Install the required dependencies:
-  ```bash
-  pip install -r requirements.txt
-  ```
+    ```bash
+    pip install -r requirements.txt
+    ```
 
 3. Run the game and train the model:
-  ```bash
-  Copy code
-  python train.py
-  ```
+    ```bash
+    Copy code
+    python train.py
+    ```
 
 
 ### Usage
 
 1. Training the Model:
-  - Modify hyperparameters in config.py if needed.
-  - Run python train.py to start training the agent.
+    - Modify hyperparameters in config.py if needed.
+    - Run python train.py to start training the agent.
 
 2. Testing the Model:
-  - After training, run python test.py to observe the agent's performance in the Flappy Bird game.
+    - After training, run python test.py to observe the agent's performance in the Flappy Bird game.
 
 ### Results
 
