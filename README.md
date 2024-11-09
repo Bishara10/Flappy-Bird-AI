@@ -65,7 +65,6 @@ The model is optimized using the following hyperparameters:
   ```
 
 3. Run the game and train the model:
-
   ```bash
   Copy code
   python train.py
