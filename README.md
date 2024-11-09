@@ -74,11 +74,11 @@ The model is optimized using the following hyperparameters:
 ### Usage
 
 1. Training the Model:
-    - Modify hyperparameters in config.py if needed.
-    - Run python train.py to start training the agent.
+  - Modify hyperparameters in config.py if needed.
+  - Run python train.py to start training the agent.
 
 2. Testing the Model:
-    - After training, run python test.py to observe the agent's performance in the Flappy Bird game.
+  - After training, run python test.py to observe the agent's performance in the Flappy Bird game.
 
 ### Results
 
