@@ -1,31 +1,38 @@
-import pygame, time
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+import pygame
 from components.AllComponents import *
 from pygame.locals import *
 from dqn import Dqn
 from brain import Brain
 import numpy as np
 from datetime import datetime
+import keras
+keras.utils.disable_interactive_logging()
 
 # Parameters
 learningRate = 0.0001
 maxMemory = 100000
-gamma = 0.95
-batchSize = 30
+gamma = 0.99
+batchSize = 32
 epsilon = 1.
-epsilonDecayRate = 0.998
+epsilonDecayRate = 0.999995
 epsilonMin = 0.05
+hidden_nodes = 8
 train_on_frames = 32  # train model every 32 frames
 action_flag = 5 # take action every 5 frames
-ddqn_enable = True
+ddqn_enable = False
+tau = 0.005
+
 
 # Initialize environment, the brain and the experience replay memory
 # 3 inputs: 
 #     1. horizontal distance from bird to top pipe
 #     2. vertical distance from the top of the bird to the top pipe
 #     3. vertical distance from bottom of the bird to the bottom pipe 
-brain = Brain(4, 2, learningRate)
-model = brain.model
-DQN = Dqn(maxMemory, gamma, model)
+DQN = Dqn(hidden_nodes=hidden_nodes, lr=learningRate, maxMemory=maxMemory, discount=gamma)
+weights_file_name = "dqntrain.weights.h5"
+maxReward = -99999
 
 # main loop
 epoch = 0
@@ -36,7 +43,16 @@ rewards_list = list()
 log_file = f"./logs/log{datetime.now().strftime('%m-%d--%H-%M')}.txt"
 
 with open(log_file, "+a") as log:
-    log.write(f"Hyperparameters:\nlearningRate = {learningRate}\nmaxMemory = {maxMemory}\ngamma = {gamma}\nbatchSize = {batchSize}\nepsilon = {epsilon}\nepsilonDecayRate = {epsilonDecayRate}\nepsilonMin = {epsilonMin}\nddqn_enable = {ddqn_enable}\n\n")
+    log.write(f"Hyperparameters:\nlearningRate = {learningRate} \
+              \nmaxMemory = \{maxMemory} \
+              \ngamma = {gamma} \
+              \nbatchSize = {batchSize} \
+              \nepsilon = {epsilon} \
+              \nepsilonDecayRate = {epsilonDecayRate} \
+              \nepsilonMin = {epsilonMin} \
+              \nhidden_nodes = {hidden_nodes} \
+              \nlearning_rate = {learningRate} \
+              \nddqn_enable = {ddqn_enable}\n\n")
 
 
 screen = pygame.display.set_mode((SCREEN_WIDHT, SCREEN_HEIGHT))
@@ -101,9 +117,9 @@ while True:
     gameOver = False
     while not gameOver:
         clock.tick(30) # was 15 -------------------------------------------------------------------------------
-        train_on_frames -= 1
-        action_flag -= 1
-        action = -1
+        # train_on_frames -= 1
+        # action_flag -= 1
+        action = None
 
         score = Score()
         display_score = score.update(new_val=SCORE)
@@ -111,26 +127,30 @@ while True:
         display_epoch = font2.render(f"epoch: {epoch}", True, (255, 255, 255))
 
         #Taking an action
-        if (action_flag == 0):
-            if np.random.rand() <= epsilon:
-                action = np.random.randint(0, 2)
-                # print(action)
+        # if (action_flag == 0):
+        epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
+        if np.random.rand() <= epsilon: 
+            action = np.random.randint(0, 10)  # 0 and 2: do nothing, 1: jump. This is done in order to increase the odds of doing nothing
+            # print(action)
 
-            else:
-                qvalues = DQN.model.predict(currentState)[0] 
-                action = np.argmax(qvalues)
-                print(f"action: {action}, qvals = {qvalues}")
+        else:
+            qvalues = DQN.model.predict(currentState)[0] 
+            action = np.argmax(qvalues)
+            print(f"action: {action}, qvals = {qvalues}")
 
-            if action == 1:
-                bird.bump()
-            elif action == -1:
-                print("wtf")
+        if action == 1:
+            bird.bump()
+        elif action > 1:
+            # do nothing
+            action = 0 # still does nothing but it's necessary to assign it to 0 as the next code blocks rely on 1 or 0
+        elif action == None:
+            print("wtf")
 
-            action_flag = 5
+        # action_flag = 5
 
         for event in pygame.event.get():
             if event.type == QUIT:
-                brain.save_weights()
+                DQN.save_weights(fname=f"quit{weights_file_name}")
                 pygame.quit()
             
             if event.type == KEYDOWN:
@@ -171,30 +191,13 @@ while True:
         screen.blit(display_score, score.pos)
         screen.blit(display_epoch, (SCREEN_WIDHT // 18 - font.get_height() // 2, SCREEN_HEIGHT//20))
 
-        screen.blit(top_boundary.surf, (0, 0))
+        screen.blit(top_boundary.surf, (0, -4))
 
 
         if (pygame.sprite.groupcollide(bird_group, ground_group, False, False, pygame.sprite.collide_mask) or
-                pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask)):
+                pygame.sprite.groupcollide(bird_group, pipe_group, False, False, pygame.sprite.collide_mask) or
+                pygame.sprite.collide_mask(bird, top_boundary)):
             pygame.mixer.find_channel().play(hit_sound)
-
-            # # restart game scenario
-            # pipe_group.empty()
-            # reward_group.empty()
-            # bird.begin()
-
-            # pipe_group = pygame.sprite.Group()
-            # reward_group = pygame.sprite.Group()
-            # for i in range (2):
-            #     pos = 240 * i + 400
-            #     pipes = get_random_pipes(pos)
-            #     pipe_group.add(pipes[0])
-            #     pipe_group.add(pipes[1])
-
-            #     reward = Reward(pos + PIPE_WIDHT) # was xpos + PIPE_WIDTH/2
-            #     reward_group.add(reward)
-                
-            # SCORE = 0
             gameOver = True
 
 
@@ -203,9 +206,6 @@ while True:
             pygame.mixer.find_channel().play(point_sound)
             SCORE += 1
             gotReward = True
-
-        if (pygame.sprite.collide_mask(bird, top_boundary)):
-            topCollision = True
 
         pygame.display.update()
 
@@ -231,50 +231,62 @@ while True:
         d_bird_nextpipe_bottom_y = nextpipe_bottom_y - bird.rect[1]
         d_bird_nextpipe_top_y = bird.rect[1] - nextpipe_top_y
 
+        pipe_middle_y = nextpipe_bottom_y - PIPE_GAP/2
+
         # state #14 and #5: bird's vertical position and bird speed
         bird_y = bird.rect[1]
         bird_speed = bird.speed
 
-        state_params.append(nextpipe_x )
-        state_params.append(d_bird_nextpipe_top_y )
-        state_params.append(d_bird_nextpipe_bottom_y )
-        # state_params.append(bird_y / SCREEN_HEIGHT)
-        state_params.append(bird_speed)
+        # state_params.append(nextpipe_x / SCREEN_WIDHT)
+        state_params.append(nextpipe_top_y / (SCREEN_HEIGHT - GROUND_HEIGHT))
+        state_params.append(nextpipe_bottom_y / (SCREEN_HEIGHT - GROUND_HEIGHT) )
+        # state_params.append(pipe_middle_y / (SCREEN_HEIGHT - GROUND_HEIGHT) )
+        state_params.append(bird_y / (SCREEN_HEIGHT - GROUND_HEIGHT))
+        state_params.append(bird_speed / MAXSPEED)
 
         # compile state parameters in nextState
         nextState[0] = np.array(state_params)
         
 
-        tst = [nextpipe_x, d_bird_nextpipe_top_y, d_bird_nextpipe_bottom_y, bird_speed]
-
         #rewards:
         if gotReward:
-            reward_this_round = 12
+            reward_this_round = 2.
             reward_group.remove(reward_group.sprites()[0])
         elif gameOver:
-            reward_this_round = -10
-        elif topCollision: 
-            reward_this_round = -5
+            reward_this_round = -2.
+        # elif topCollision: 
+            # reward_this_round = -1
         else:
             reward_this_round = 0.1
 
         # Remeber new experience
         DQN.remember([currentState, action, reward_this_round, nextState], gameOver)
 
-        if train_on_frames == 0:
-            inputs, targets = DQN.getBatch(batchSize, ddqn=ddqn_enable)
-            DQN.model.train_on_batch(inputs, targets)
-            train_on_frames = 32
+        # if train_on_frames == 0:
+        #     inputs, targets = DQN.getBatch(batchSize, ddqn=ddqn_enable)
+        #     DQN.model.train_on_batch(inputs, targets)
+        #     train_on_frames = 32
 
         currentState = nextState
         gotReward = False #reset 
         totReward += reward_this_round
-        print(tst, totReward)
+        print(state_params, totReward)
 
-    # inputs, targets = DQN.getBatch(model, batchSize)
-    # model.train_on_batch(inputs, targets)
+    inputs, targets = DQN.getBatch(batchSize, True)
+    DQN.model.train_on_batch(inputs, targets)
     # train_on_frames = 20
 
+    if (totReward > maxReward):
+            maxReward = totReward
+            DQN.save_weights(weights_file_name)
+
+    if (ddqn_enable):
+        DQN.soft_update_target_dqn(tau)
+        # DQN.update_target_dqn()
+
+    with open(log_file, "a") as log:
+        log.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon} | pipes passed = {SCORE}\n")
+        
     # restart game scenario
     pipe_group.empty()
     reward_group.empty()
@@ -291,14 +303,9 @@ while True:
         reward = Reward(pos + PIPE_WIDHT/2) # was xpos + PIPE_WIDTH/2
         reward_group.add(reward)
         
-    SCORE = 0
     action_flag = 5
 
-    brain.save_weights()
-    epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
+    # epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
     rewards_list.append(totReward)
-    with open(log_file, "a") as log:
-        log.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon}\n")
+    SCORE = 0
     totReward = 0
-
-

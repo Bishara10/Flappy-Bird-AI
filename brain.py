@@ -1,23 +1,24 @@
 import keras
+keras.utils.disable_interactive_logging()
 
 class Brain():
-    def __init__(self, input_size, output_size, lr):
-        self._weights_file_name = "dqntrain.weights.h5"
+    def __init__(self, hidden_nodes, input_size, output_size, lr):
         self.numInputs = input_size
         self.numOutputs = output_size
         self.learningRate = lr
 
         self.model = keras.models.Sequential()
-        self.model.add(keras.layers.Dense(units=256, activation='relu', input_shape=(self.numInputs, )))
+        self.model.add(keras.layers.Dense(units=hidden_nodes, activation='relu', input_shape=(self.numInputs, )))
+        self.model.add(keras.layers.Dense(units=hidden_nodes, activation='relu'))
         self.model.add(keras.layers.Dense(units=self.numOutputs))
-        self.model.compile(optimizer=keras.optimizers.Adam(learning_rate=self.learningRate), loss='mean_squared_error')
+        self.model.compile(optimizer=keras.optimizers.AdamW(learning_rate=self.learningRate, amsgrad=True), loss='mean_squared_error')
 
     # save model weights
-    def save_weights(self):
-        self.model.save_weights(self._weights_file_name)
+    def save_weights(self, fname):
+        self.model.save_weights(fname)
 
-    #load model weights
-    def load_weights(self):
-        self.model.load_weights(self._weights_file_name)
+    #load model weightss
+    def load_weights(self, fname):
+        self.model.load_weights(fname)
 
 # print(brain.model.summary())
