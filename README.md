@@ -54,15 +54,15 @@ The model is optimized using the following hyperparameters:
 ## Installation
 
 1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/Flappy-Bird-AI-DDQN.git
-   cd Flappy-Bird-AI-DDQN
-   ```
+ ```bash
+ git clone https://github.com/your-username/Flappy-Bird-AI-DDQN.git
+ cd Flappy-Bird-AI-DDQN
+ ```
 
 2. Install the required dependencies:
-  ```bash
-  pip install -r requirements.txt
-  ```
+```bash
+pip install -r requirements.txt
+```
 
 3. Run the game and train the model:
 
@@ -75,11 +75,11 @@ python train.py
 ### Usage
 
 1. Training the Model:
-  - Modify hyperparameters in config.py if needed.
-  - Run python train.py to start training the agent.
+- Modify hyperparameters in config.py if needed.
+- Run python train.py to start training the agent.
 
 2. Testing the Model:
-  - After training, run python test.py to observe the agent's performance in the Flappy Bird game.
+- After training, run python test.py to observe the agent's performance in the Flappy Bird game.
 
 ### Results
 
