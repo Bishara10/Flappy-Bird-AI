@@ -32,9 +32,7 @@ This separation allows the agent to make more reliable updates, which leads to m
 To maintain stability during training, the **target network** is updated using a **soft update** method. Instead of completely replacing the target network weights with those from the main network, the soft update gradually blends them according to a parameter `tau`. This allows smoother transitions and helps avoid abrupt changes, which can destabilize training.
 
 The update rule for each parameter is:
-   \[
-   \theta_{target} = \tau \times \theta_{main} + (1 - \tau) \times \theta_{target}
-   \]
+   Q_{\text{target}} = \tau * Q_{\text{current}} + (1 - \tau)*Q_{\text{target}}
 
 ### Epsilon-Greedy Strategy
 
