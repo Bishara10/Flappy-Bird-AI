@@ -46,7 +46,7 @@ The model is a simple neural network designed for the agent's decision-making:
 The model is optimized using the following hyperparameters:
     - **Learning Rate**: `0.0001`
     - **Discount Factor (gamma)**: `0.95`
-    - **Batch Size**: `30`
+    - **Batch Size**: `32`
     - **Memory Size**: `100000`
     - **Epsilon Decay Rate**: `0.998`
     - **Minimum Epsilon**: `0.05`
