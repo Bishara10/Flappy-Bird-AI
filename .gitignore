@@ -1,5 +1,5 @@
 /.venv
-logs
 log.txt
 tests
 __pycache__
+.idea

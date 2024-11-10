@@ -60,7 +60,9 @@ class Dqn():
     
 
     def remember(self, transition, gameOver):
+        print(transition)
         self.memory.append([transition, gameOver])
+        print(self.memory[-1])
         if len(self.memory) > self.maxMemory:
             del self.memory[0]
 

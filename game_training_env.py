@@ -3,6 +3,7 @@ from pygame.locals import *
 from dqn import Dqn
 import numpy as np
 from datetime import datetime
+from copy import deepcopy
 import keras
 keras.utils.disable_interactive_logging()
 
@@ -12,7 +13,7 @@ maxMemory = 100000
 gamma = 0.95
 batchSize = 32
 epsilon = 1.
-epsilonDecayRate = 0.99999
+epsilonDecayRate = 0.9999
 epsilonMin = 0.05
 hidden_nodes = 8
 train_on_frames = 32  # train model every 32 frames
@@ -160,13 +161,12 @@ while True:
 
         #Taking an action
         # if (action_flag == 0):
-        epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
-        if np.random.rand() <= epsilon: 
+        if np.random.rand() <= epsilon:
             action = np.random.randint(0, 10)  # 0 and 2: do nothing, 1: jump. This is done in order to increase the odds of doing nothing
             # print(action)
 
         else:
-            qvalues = DQN.model(currentState)[0] 
+            qvalues = DQN.model(currentState)[0]
             action = np.argmax(qvalues)
             # print(f"action: {action}, qvals = {qvalues}")
 
@@ -184,7 +184,7 @@ while True:
             if event.type == QUIT:
                 DQN.save_weights(fname=f"quit{weights_file_name}")
                 pygame.quit()
-            
+
             if event.type == KEYDOWN:
                 if event.key == K_SPACE:
                     bird.bump()
@@ -197,7 +197,7 @@ while True:
 
             new_ground = Ground(GROUND_WIDHT - 20)
             ground_group.add(new_ground)
-        
+
         if is_off_screen(pipe_group.sprites()[0]):
             pipe_group.remove(pipe_group.sprites()[0])
             pipe_group.remove(pipe_group.sprites()[0])
@@ -241,45 +241,10 @@ while True:
 
         pygame.display.update()
 
-
-        # Get state parameters, the way they are computed relies on the fact that pipe_group always has 3 pipes
-        # and the game always displays 3 pipes at a time.
-        # Get state parameter #1, #2 and #3: Get next pipe horizontal position, top and bottom vertical position
-            # state_params = []
-            #
-            # chosenpipeindex = 0
-            # nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] + PIPE_WIDHT
-            # if (nextpipe_x < bird.rect[0]):
-            #     chosenpipeindex = 2 # if the next pipe is to the left of the bird, choose the right pipe
-            #
-            # # nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0]
-            # # nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
-            # # nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
-            #
-            # nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] - bird.rect[0]
-            # nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
-            # nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
-            #
-            # d_bird_nextpipe_bottom_y = nextpipe_bottom_y - bird.rect[1]
-            # d_bird_nextpipe_top_y = bird.rect[1] - nextpipe_top_y
-            #
-            # pipe_middle_y = nextpipe_bottom_y - PIPE_GAP/2
-            #
-            # # state #14 and #5: bird's vertical position and bird speed
-            # bird_y = bird.rect[1]
-            # bird_speed = bird.speed
-            #
-            # # state_params.append(nextpipe_x / SCREEN_WIDHT)
-            # state_params.append(nextpipe_top_y )
-            # state_params.append(nextpipe_bottom_y )
-            # state_params.append(pipe_middle_y)
-            # state_params.append(bird_y)
-            # state_params.append(bird_speed / MAXSPEED)
-
         # compile state parameters in nextState
         # nextState[0] = np.array(state_params)
         nextState[0] = getGameState(pipe_group, bird)
-        
+
 
         #rewards:
         if gotReward:
@@ -287,21 +252,21 @@ while True:
             reward_group.remove(reward_group.sprites()[0])
         elif gameOver:
             reward_this_round = -2.
-        # elif topCollision: 
+        # elif topCollision:
             # reward_this_round = -1
         else:
             reward_this_round = 0.1
 
         # Remeber new experience
-        DQN.remember([currentState, action, reward_this_round, nextState], gameOver)
+        DQN.remember([deepcopy(currentState), action, reward_this_round, deepcopy(nextState)], gameOver)
 
         # if train_on_frames == 0:
         #     inputs, targets = DQN.getBatch(batchSize, ddqn=ddqn_enable)
         #     DQN.model.train_on_batch(inputs, targets)
         #     train_on_frames = 32
 
-        currentState = nextState.copy()
-        gotReward = False #reset 
+        currentState = deepcopy(nextState)
+        gotReward = False #reset
         totReward += reward_this_round
         # print(state_params, totReward)
 
@@ -320,7 +285,7 @@ while True:
 
     with open(log_file, "a") as log:
         log.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon} | pipes passed = {SCORE}\n")
-        
+
     # restart game scenario
     pipe_group.empty()
     reward_group.empty()
@@ -336,10 +301,10 @@ while True:
 
         reward = Reward(pos + PIPE_WIDHT/2) # was xpos + PIPE_WIDTH/2
         reward_group.add(reward)
-        
+
     action_flag = 5
 
-    # epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
+    epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
     rewards_list.append(totReward)
     SCORE = 0
     totReward = 0
