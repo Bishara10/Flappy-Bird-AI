@@ -1,4 +1,4 @@
-from dqn import Dqn
+from olddqn import Dqn
 from brain import Brain
 import numpy as np
 import game_training_env

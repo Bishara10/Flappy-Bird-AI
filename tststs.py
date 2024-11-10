@@ -1,7 +1,7 @@
 import pygame, time
 from components.AllComponents import *
 from pygame.locals import *
-from dqn import Dqn
+from olddqn import Dqn
 from brain import Brain
 import numpy as np
 from datetime import datetime

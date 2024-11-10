@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 from brain import Brain
+from experience_replay import ExperienceReplay
 import keras
 keras.utils.disable_interactive_logging()
 
@@ -9,31 +10,27 @@ class Dqn():
         self.maxMemory = maxMemory
         self.discount = discount
         self.memory = list()
+        
 
-        self.model = Brain(hidden_nodes, 4, 2, lr).model
-
-        self.target_dqn = Brain(hidden_nodes, 4, 2, lr).model
+        self.model = Brain(hidden_nodes, 5, 2, lr).model
+        self.target_dqn = Brain(hidden_nodes, 5, 2, lr).model
         self.update_target_dqn()
 
-    # Remembering new experience
-    def remember(self, transition, gameOver):
-        self.memory.append([transition, gameOver])
-        if len(self.memory) > self.maxMemory:
-            del self.memory[0]
 
     # Getting batches of inputs and targets
+    @tf.function
     def getBatch(self, batchSize, ddqn=False):
-        lenMemory = len(self.memory)
-        batchSize = min(batchSize, lenMemory)
+        if len(self.memory) < batchSize:
+            return None, None
 
         # Randomly sample batch indices
-        indices = np.random.randint(0, lenMemory, size=batchSize)
+        indices = np.random.randint(0, batchSize, size=batchSize)
 
         # Extract data and convert to tensors
-        inputs = tf.convert_to_tensor([self.memory[idx][0][0] for idx in indices], dtype=tf.float32)
+        inputs = tf.convert_to_tensor(np.squeeze(np.array([self.memory[idx][0][0] for idx in indices]), axis=1), dtype=tf.float32)
         actions = tf.convert_to_tensor([self.memory[idx][0][1] for idx in indices], dtype=tf.int32)
         rewards = tf.convert_to_tensor([self.memory[idx][0][2] for idx in indices], dtype=tf.float32)
-        nextStates = tf.convert_to_tensor([self.memory[idx][0][3] for idx in indices], dtype=tf.float32)
+        nextStates = tf.convert_to_tensor(np.squeeze(np.array([self.memory[idx][0][3] for idx in indices]), axis=1), dtype=tf.float32)
         gameOvers = tf.convert_to_tensor([self.memory[idx][1] for idx in indices], dtype=tf.float32)
 
         # Reshape inputs and nextStates according to model's input shape
@@ -60,9 +57,17 @@ class Dqn():
         targets = tf.tensor_scatter_nd_update(targets, indices, targetQValues)
 
         return inputs, targets
+    
+
+    def remember(self, transition, gameOver):
+        self.memory.append([transition, gameOver])
+        if len(self.memory) > self.maxMemory:
+            del self.memory[0]
+
 
     def update_target_dqn(self):
         self.target_dqn.set_weights(self.model.get_weights())
+
 
     def soft_update_target_dqn(self, tau: float):
         main_network_weights = self.model.get_weights()
@@ -77,8 +82,10 @@ class Dqn():
         # Set the new weights to the target model
         self.target_dqn.set_weights(new_weights)
 
+
     def save_weights(self, fname):
         self.model.save_weights(fname)
+
 
     def load_weights(self, fname):
         self.model.load_weights(fname)

@@ -1,10 +1,6 @@
-import os
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-import pygame
 from components.AllComponents import *
 from pygame.locals import *
 from dqn import Dqn
-from brain import Brain
 import numpy as np
 from datetime import datetime
 import keras
@@ -13,15 +9,15 @@ keras.utils.disable_interactive_logging()
 # Parameters
 learningRate = 0.0001
 maxMemory = 100000
-gamma = 0.99
+gamma = 0.95
 batchSize = 32
 epsilon = 1.
-epsilonDecayRate = 0.999995
+epsilonDecayRate = 0.99999
 epsilonMin = 0.05
 hidden_nodes = 8
 train_on_frames = 32  # train model every 32 frames
 action_flag = 5 # take action every 5 frames
-ddqn_enable = False
+ddqn_enable = True
 tau = 0.005
 
 
@@ -36,7 +32,7 @@ maxReward = -99999
 
 # main loop
 epoch = 0
-currentState = np.zeros((1, 4))
+currentState = np.zeros((1, 5))
 nextState = currentState
 totReward = 0
 rewards_list = list()
@@ -99,8 +95,42 @@ def prepare_game_scenario():
     return bird_group, bird, ground_group, pipe_group, reward_group, top_boundary, score
 
 
+def getGameState(pipe_group: pygame.sprite.Group, bird_obj: Bird):
+    state_params = []
+
+    chosenpipeindex = 0
+    nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] + PIPE_WIDHT
+    if (nextpipe_x < bird_obj.rect[0]):
+        chosenpipeindex = 2  # if the next pipe is to the left of the bird, choose the right pipe
+
+    # nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0]
+    # nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
+    # nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
+
+    nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] - bird_obj.rect[0]
+    nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
+    nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
+
+    d_bird_nextpipe_bottom_y = nextpipe_bottom_y - bird_obj.rect[1]
+    d_bird_nextpipe_top_y = bird_obj.rect[1] - nextpipe_top_y
+
+    pipe_middle_y = nextpipe_bottom_y - (PIPE_GAP / 2)
+
+    # state #14 and #5: bird's vertical position and bird speed
+    bird_y = bird_obj.rect[1]
+    bird_speed = bird_obj.speed
+
+    # state_params.append(nextpipe_x / SCREEN_WIDHT)
+    state_params.append(nextpipe_top_y)
+    state_params.append(nextpipe_bottom_y)
+    state_params.append(pipe_middle_y)
+    state_params.append(bird_y)
+    state_params.append(bird_speed)
+
+    return state_params
+
 bird_group, bird, ground_group, pipe_group, reward_group, top_boundary, SCORE = prepare_game_scenario()
-clock = pygame.time.Clock() 
+clock = pygame.time.Clock()
 
 bird.begin()
 
@@ -108,8 +138,10 @@ bird.begin()
 # Training loop 
 while True:
     epoch += 1
-    currentState = np.zeros((1, 4))
-    nextState = currentState
+    currentState = np.zeros((1, 5))
+    # get current game state:
+    nextState = np.zeros((1, 5))
+    currentState[0] = getGameState(pipe_group, bird)
     gotReward = False
     topCollision = False
 
@@ -134,9 +166,9 @@ while True:
             # print(action)
 
         else:
-            qvalues = DQN.model.predict(currentState)[0] 
+            qvalues = DQN.model(currentState)[0] 
             action = np.argmax(qvalues)
-            print(f"action: {action}, qvals = {qvalues}")
+            # print(f"action: {action}, qvals = {qvalues}")
 
         if action == 1:
             bird.bump()
@@ -213,39 +245,40 @@ while True:
         # Get state parameters, the way they are computed relies on the fact that pipe_group always has 3 pipes
         # and the game always displays 3 pipes at a time.
         # Get state parameter #1, #2 and #3: Get next pipe horizontal position, top and bottom vertical position
-        state_params = []
-
-        chosenpipeindex = 0
-        nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] + PIPE_WIDHT
-        if (nextpipe_x < bird.rect[0]):
-            chosenpipeindex = 2 # if the next pipe is to the left of the bird, choose the right pipe
-
-        # nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0]
-        # nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
-        # nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
-
-        nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] - bird.rect[0]
-        nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
-        nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
-
-        d_bird_nextpipe_bottom_y = nextpipe_bottom_y - bird.rect[1]
-        d_bird_nextpipe_top_y = bird.rect[1] - nextpipe_top_y
-
-        pipe_middle_y = nextpipe_bottom_y - PIPE_GAP/2
-
-        # state #14 and #5: bird's vertical position and bird speed
-        bird_y = bird.rect[1]
-        bird_speed = bird.speed
-
-        # state_params.append(nextpipe_x / SCREEN_WIDHT)
-        state_params.append(nextpipe_top_y / (SCREEN_HEIGHT - GROUND_HEIGHT))
-        state_params.append(nextpipe_bottom_y / (SCREEN_HEIGHT - GROUND_HEIGHT) )
-        # state_params.append(pipe_middle_y / (SCREEN_HEIGHT - GROUND_HEIGHT) )
-        state_params.append(bird_y / (SCREEN_HEIGHT - GROUND_HEIGHT))
-        state_params.append(bird_speed / MAXSPEED)
+            # state_params = []
+            #
+            # chosenpipeindex = 0
+            # nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] + PIPE_WIDHT
+            # if (nextpipe_x < bird.rect[0]):
+            #     chosenpipeindex = 2 # if the next pipe is to the left of the bird, choose the right pipe
+            #
+            # # nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0]
+            # # nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
+            # # nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
+            #
+            # nextpipe_x = pipe_group.sprites()[chosenpipeindex].rect[0] - bird.rect[0]
+            # nextpipe_bottom_y = pipe_group.sprites()[chosenpipeindex].rect[1]
+            # nextpipe_top_y = nextpipe_bottom_y - PIPE_GAP
+            #
+            # d_bird_nextpipe_bottom_y = nextpipe_bottom_y - bird.rect[1]
+            # d_bird_nextpipe_top_y = bird.rect[1] - nextpipe_top_y
+            #
+            # pipe_middle_y = nextpipe_bottom_y - PIPE_GAP/2
+            #
+            # # state #14 and #5: bird's vertical position and bird speed
+            # bird_y = bird.rect[1]
+            # bird_speed = bird.speed
+            #
+            # # state_params.append(nextpipe_x / SCREEN_WIDHT)
+            # state_params.append(nextpipe_top_y )
+            # state_params.append(nextpipe_bottom_y )
+            # state_params.append(pipe_middle_y)
+            # state_params.append(bird_y)
+            # state_params.append(bird_speed / MAXSPEED)
 
         # compile state parameters in nextState
-        nextState[0] = np.array(state_params)
+        # nextState[0] = np.array(state_params)
+        nextState[0] = getGameState(pipe_group, bird)
         
 
         #rewards:
@@ -267,13 +300,14 @@ while True:
         #     DQN.model.train_on_batch(inputs, targets)
         #     train_on_frames = 32
 
-        currentState = nextState
+        currentState = nextState.copy()
         gotReward = False #reset 
         totReward += reward_this_round
-        print(state_params, totReward)
+        # print(state_params, totReward)
 
     inputs, targets = DQN.getBatch(batchSize, True)
-    DQN.model.train_on_batch(inputs, targets)
+    if inputs is not None and targets is not None:
+        DQN.model.train_on_batch(inputs, targets)
     # train_on_frames = 20
 
     if (totReward > maxReward):
