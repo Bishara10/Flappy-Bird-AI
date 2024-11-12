@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 from brain import Brain
-from experience_replay import ExperienceReplay
 import keras
 keras.utils.disable_interactive_logging()
 
