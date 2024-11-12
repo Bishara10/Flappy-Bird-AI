@@ -24,13 +24,13 @@ class Dqn():
             return None, None
 
         # Randomly sample batch indices
-        indices = np.random.randint(0, batchSize, size=batchSize)
+        indices = np.random.randint(0, len(self.memory), size=batchSize)
 
         # Extract data and convert to tensors
-        inputs = tf.convert_to_tensor(np.squeeze(np.array([self.memory[idx][0][0] for idx in indices]), axis=1), dtype=tf.float32)
+        inputs = tf.convert_to_tensor([tf.squeeze(self.memory[idx][0][0]) for idx in indices], dtype=tf.float32)
         actions = tf.convert_to_tensor([self.memory[idx][0][1] for idx in indices], dtype=tf.int32)
         rewards = tf.convert_to_tensor([self.memory[idx][0][2] for idx in indices], dtype=tf.float32)
-        nextStates = tf.convert_to_tensor(np.squeeze(np.array([self.memory[idx][0][3] for idx in indices]), axis=1), dtype=tf.float32)
+        nextStates = tf.convert_to_tensor([tf.squeeze(self.memory[idx][0][3]) for idx in indices], dtype=tf.float32)
         gameOvers = tf.convert_to_tensor([self.memory[idx][1] for idx in indices], dtype=tf.float32)
 
         # Reshape inputs and nextStates according to model's input shape
@@ -60,9 +60,7 @@ class Dqn():
     
 
     def remember(self, transition, gameOver):
-        print(transition)
         self.memory.append([transition, gameOver])
-        print(self.memory[-1])
         if len(self.memory) > self.maxMemory:
             del self.memory[0]
 

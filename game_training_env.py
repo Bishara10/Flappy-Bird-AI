@@ -8,25 +8,21 @@ import keras
 keras.utils.disable_interactive_logging()
 
 # Parameters
-learningRate = 0.0001
+learningRate = 0.0005
 maxMemory = 100000
 gamma = 0.95
 batchSize = 32
 epsilon = 1.
 epsilonDecayRate = 0.9999
 epsilonMin = 0.05
-hidden_nodes = 8
+hidden_nodes = 64
 train_on_frames = 32  # train model every 32 frames
 action_flag = 5 # take action every 5 frames
-ddqn_enable = True
+ddqn_enable = True 
 tau = 0.005
 
 
-# Initialize environment, the brain and the experience replay memory
-# 3 inputs: 
-#     1. horizontal distance from bird to top pipe
-#     2. vertical distance from the top of the bird to the top pipe
-#     3. vertical distance from bottom of the bird to the bottom pipe 
+# Initialize environment, and the experience replay memory
 DQN = Dqn(hidden_nodes=hidden_nodes, lr=learningRate, maxMemory=maxMemory, discount=gamma)
 weights_file_name = "dqntrain.weights.h5"
 maxReward = -99999
