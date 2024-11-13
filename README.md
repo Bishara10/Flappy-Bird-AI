@@ -9,9 +9,6 @@ This project is an AI agent designed to play the game **Flappy Bird** autonomous
   - [Epsilon-Greedy Strategy](#epsilon-greedy-strategy)
 - [Model Architecture](#model-architecture)
 - [Installation](#installation)
-- [Usage](#usage)
-- [Results](#results)
-- [Future Improvements](#future-improvements)
 
 ## Introduction
 
@@ -80,20 +77,4 @@ The model is optimized using the following hyperparameters:
     ```
 
 
-## Usage
-
-1. Training the Model:
-  - Modify hyperparameters in config.py if needed.
-  - Run python train.py to start training the agent.
-
-2. Testing the Model:
-  - After training, run python test.py to observe the agent's performance in the Flappy Bird game.
-
-## Results
-
-
-## Future Improvements
-
-Enhanced State Representation: Add additional features, such as distances to upcoming pipes, to help the agent make more informed decisions.
-Prioritized Experience Replay: Implement experience prioritization to sample more valuable experiences for faster convergence.
-Parameter Optimization: Experiment with network architecture and hyperparameters to improve learning efficiency and gameplay skill.
+The code is still being updated for readability and simplicity, as well as organizing modules.
