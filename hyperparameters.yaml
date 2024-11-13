@@ -1,0 +1,10 @@
+learningRate : 0.0005
+maxMemory : 100000
+gamma : 0.95
+batchSize : 32
+epsilon : 1.
+epsilonDecayRate : 0.9999
+epsilonMin : 0.05
+hidden_nodes : 64
+ddqn_enable : True
+tau : 0.005

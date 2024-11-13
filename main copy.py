@@ -16,17 +16,19 @@ epsilon = 1.
 epsilonDecayRate = 0.9999
 epsilonMin = 0.05
 hidden_nodes = 64
+train_on_frames = 32  # train model every 32 frames
+action_flag = 5 # take action every 5 frames
 ddqn_enable = True 
 tau = 0.005
 
 
 # Initialize environment, and the experience replay memory
 DQN = Dqn(hidden_nodes=hidden_nodes, lr=learningRate, maxMemory=maxMemory, discount=gamma)
-weights_file_name = "dqntrain.weights.h5"
+# weights_file_name = "dqntrain.weights.h5"
 maxReward = -99999
 
 # main loop
-epoch = 0
+epoch = 19612
 currentState = np.zeros((1, 5))
 nextState = currentState
 totReward = 0
@@ -130,6 +132,8 @@ clock = pygame.time.Clock()
 bird.begin()
 
 
+DQN.load_weights("l.weights.h5")
+
 # Training loop 
 while True:
     epoch += 1
@@ -144,6 +148,8 @@ while True:
     gameOver = False
     while not gameOver:
         clock.tick(30) # was 15 -------------------------------------------------------------------------------
+        # train_on_frames -= 1
+        # action_flag -= 1
         action = None
 
         score = Score()
@@ -152,14 +158,15 @@ while True:
         display_epoch = font2.render(f"epoch: {epoch}", True, (255, 255, 255))
 
         #Taking an action
-        if np.random.rand() <= epsilon:
-            action = np.random.randint(0, 10)  # 0 and 2: do nothing, 1: jump. This is done in order to increase the odds of doing nothing
-            # print(action)
+        # if (action_flag == 0):
+        # if np.random.rand() <= epsilon:
+        #     action = np.random.randint(0, 10)  # 0 and 2: do nothing, 1: jump. This is done in order to increase the odds of doing nothing
+        #     # print(action)
 
-        else:
-            qvalues = DQN.model(currentState)[0]
-            action = np.argmax(qvalues)
-            # print(f"action: {action}, qvals = {qvalues}")
+        # else:
+        qvalues = DQN.model(currentState)[0]
+        action = np.argmax(qvalues)
+        # print(f"action: {action}, qvals = {qvalues}")
 
         if action == 1:
             bird.bump()
@@ -167,12 +174,13 @@ while True:
             # do nothing
             action = 0 # still does nothing but it's necessary to assign it to 0 as the next code blocks rely on 1 or 0
         elif action == None:
-            print("no action")
+            print("wtf")
 
+        # action_flag = 5
 
         for event in pygame.event.get():
             if event.type == QUIT:
-                DQN.save_weights(fname=f"quit{weights_file_name}")
+                # DQN.save_weights(fname=f"quit{weights_file_name}")
                 pygame.quit()
 
             if event.type == KEYDOWN:
@@ -210,8 +218,8 @@ while True:
         ground_group.draw(screen)
         reward_group.draw(screen)
 
-        screen.blit(display_score, score.pos)
-        screen.blit(display_epoch, (SCREEN_WIDHT // 18 - font.get_height() // 2, SCREEN_HEIGHT//20))
+        # screen.blit(display_score, score.pos)
+        screen.blit(display_epoch, (SCREEN_WIDHT // 14 - font.get_height() // 2, SCREEN_HEIGHT//20))
 
         screen.blit(top_boundary.surf, (0, -4))
 
@@ -250,18 +258,24 @@ while True:
         # Remeber new experience
         DQN.remember([deepcopy(currentState), action, reward_this_round, deepcopy(nextState)], gameOver)
 
+        # if train_on_frames == 0:
+        #     inputs, targets = DQN.getBatch(batchSize, ddqn=ddqn_enable)
+        #     DQN.model.train_on_batch(inputs, targets)
+        #     train_on_frames = 32
+
         currentState = deepcopy(nextState)
         gotReward = False #reset
         totReward += reward_this_round
         # print(state_params, totReward)
 
-    inputs, targets = DQN.getBatch(batchSize, True)
-    if inputs is not None and targets is not None:
-        DQN.model.train_on_batch(inputs, targets)
+    # inputs, targets = DQN.getBatch(batchSize, True)
+    # if inputs is not None and targets is not None:
+    #     DQN.model.train_on_batch(inputs, targets)
+    # train_on_frames = 20
 
     if (totReward > maxReward):
             maxReward = totReward
-            DQN.save_weights(weights_file_name)
+            # DQN.save_weights(weights_file_name)
 
     if (ddqn_enable):
         DQN.soft_update_target_dqn(tau)
@@ -285,6 +299,8 @@ while True:
 
         reward = Reward(pos + PIPE_WIDHT/2) # was xpos + PIPE_WIDTH/2
         reward_group.add(reward)
+
+    action_flag = 5
 
     epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
     rewards_list.append(totReward)
