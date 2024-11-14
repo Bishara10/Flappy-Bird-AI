@@ -1,23 +1,25 @@
 from components.AllComponents import *
-from pygame.locals import *
+from components.misc import *
 from dqn import Dqn
 import numpy as np
-from datetime import datetime
-from copy import deepcopy
 import keras
 keras.utils.disable_interactive_logging()
 
-# Parameters
-learningRate = 0.0005
-maxMemory = 100000
-gamma = 0.95
-batchSize = 32
-epsilon = 1.
-epsilonDecayRate = 0.9999
-epsilonMin = 0.05
-hidden_nodes = 64
-ddqn_enable = True 
-tau = 0.005
+# load hyperparameters
+parameters = None
+with open("hyperparameters.yml", "r") as parameters_file:
+    parameters = yaml.safe_load(parameters_file)
+
+learningRate = parameters["learningRate"]
+maxMemory = parameters["maxMemory"]
+gamma = parameters["gamma"]
+batchSize = parameters["batchSize"]
+epsilon = parameters["epsilon"]
+epsilonDecayRate = parameters["epsilonDecayRate"]
+epsilonMin = parameters["epsilonMin"]
+hidden_nodes = parameters["hidden_nodes"]
+ddqn_enable = parameters["ddqn_enable"] 
+tau = parameters["tau"]
 
 
 # Initialize environment, and the experience replay memory
@@ -30,38 +32,22 @@ epoch = 0
 currentState = np.zeros((1, 5))
 nextState = currentState
 totReward = 0
-rewards_list = list()
-log_file = f"./logs/log{datetime.now().strftime('%m-%d--%H-%M')}.txt"
 
-with open(log_file, "+a") as log:
-    log.write(f"Hyperparameters:\nlearningRate = {learningRate} \
-              \nmaxMemory = \{maxMemory} \
-              \ngamma = {gamma} \
-              \nbatchSize = {batchSize} \
-              \nepsilon = {epsilon} \
-              \nepsilonDecayRate = {epsilonDecayRate} \
-              \nepsilonMin = {epsilonMin} \
-              \nhidden_nodes = {hidden_nodes} \
-              \nlearning_rate = {learningRate} \
-              \nddqn_enable = {ddqn_enable}\n\n")
-
+# Create a new log file and log the parameters
+log = Log()
+log.log_parameters()
 
 screen = pygame.display.set_mode((SCREEN_WIDHT, SCREEN_HEIGHT))
 pygame.display.set_caption('Flappy Bird')
+pygame.mixer.set_num_channels(10)
 
 BACKGROUND = pygame.image.load('assets/sprites/background-day.png')
 BACKGROUND = pygame.transform.scale(BACKGROUND, (SCREEN_WIDHT, SCREEN_HEIGHT))
-
-# nextstate parameters:
-d_reward_bird = 0
-d_topPipe_bird = 0
-d_bottomPipe_bird = 0
 
 def prepare_game_scenario():
     bird_group = pygame.sprite.Group()
     bird = Bird()
     bird_group.add(bird)
-
 
 
     ground_group = pygame.sprite.Group()
@@ -128,6 +114,7 @@ bird_group, bird, ground_group, pipe_group, reward_group, top_boundary, SCORE = 
 clock = pygame.time.Clock()
 
 bird.begin()
+score = Score()
 
 
 # Training loop 
@@ -146,9 +133,7 @@ while True:
         clock.tick(30) # was 15 -------------------------------------------------------------------------------
         action = None
 
-        score = Score()
         display_score = score.update(new_val=SCORE)
-
         display_epoch = font2.render(f"epoch: {epoch}", True, (255, 255, 255))
 
         #Taking an action
@@ -177,7 +162,7 @@ while True:
 
             if event.type == KEYDOWN:
                 if event.key == K_SPACE:
-                    bird.bump()
+                    DQN.model.save_weights(weights_file_name)
 
 
         screen.blit(BACKGROUND, (0, 0))
@@ -248,9 +233,9 @@ while True:
             reward_this_round = 0.1
 
         # Remeber new experience
-        DQN.remember([deepcopy(currentState), action, reward_this_round, deepcopy(nextState)], gameOver)
+        DQN.remember([np.copy(currentState), action, reward_this_round, np.copy(nextState)], gameOver)
 
-        currentState = deepcopy(nextState)
+        currentState = np.copy(nextState)
         gotReward = False #reset
         totReward += reward_this_round
         # print(state_params, totReward)
@@ -267,8 +252,7 @@ while True:
         DQN.soft_update_target_dqn(tau)
         # DQN.update_target_dqn()
 
-    with open(log_file, "a") as log:
-        log.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon} | pipes passed = {SCORE}\n")
+    log.log_default(epoch, totReward, epsilon, SCORE)
 
     # restart game scenario
     pipe_group.empty()
@@ -287,6 +271,6 @@ while True:
         reward_group.add(reward)
 
     epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
-    rewards_list.append(totReward)
     SCORE = 0
     totReward = 0
+    print(len(DQN.memory))
