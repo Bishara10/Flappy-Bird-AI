@@ -21,11 +21,13 @@ epsilonMin = parameters["epsilonMin"]
 hidden_nodes = parameters["hidden_nodes"]
 ddqn_enable = parameters["ddqn_enable"] 
 tau = parameters["tau"]
-
+training = parameters["train"]
 
 # Initialize environment, and the experience replay memory
 DQN = Dqn(hidden_nodes=hidden_nodes, lr=learningRate, maxMemory=maxMemory, discount=gamma)
 weights_file_name = "dqntrain.weights.h5"
+if not training:
+    DQN.load_weights(weights_file_name)
 
 # main loop
 epoch = 0
@@ -61,7 +63,7 @@ while epoch < 50000:
         # if random number is less than epsilon, take a random action, otherwise, 
         # let the model predict an action and take the action with the highest Q-value
         action = None
-        if np.random.rand() <= epsilon:
+        if np.random.rand() <= epsilon and training:
             # The bird jumps if action = 1, if action = 0, do nothing. Here, a random number is generated
             # between 0 and 10, even though only 0 and 1 are used. If the number is not 1, then the
             # bird does not jump. This is done to prevent the bird from jumping almost every frame, and helps
@@ -71,6 +73,7 @@ while epoch < 50000:
         else:
             qvalues = DQN.model(currentState)[0]
             action = np.argmax(qvalues)
+
 
         # Only 1 and 0 are used. If the value is higher than 1 (as a result of taking a random action), 
         # then the action is set to 0, otherwise, it is set to 1
@@ -91,30 +94,33 @@ while epoch < 50000:
             reward_this_round = 0.1
 
         # Remeber new experience
-        DQN.remember([np.copy(currentState), action, reward_this_round, np.copy(nextState)], gameOver)
+        if training:
+            DQN.remember([np.copy(currentState), action, reward_this_round, np.copy(nextState)], gameOver)
 
         currentState = np.copy(nextState)
         gotReward = False #reset
         totReward += reward_this_round
         # print(state_params, totReward)
 
-    # Train the model on the current state and the expected values of the action taken (Q values). Get these
-    # vlaues from the getBatch() function then feed it into the model for training.
-    inputs, targets = DQN.getBatch(batchSize, True)
-    if inputs is not None and targets is not None:
-        DQN.model.train_on_batch(inputs, targets)
-
-    # Save the weights whenever the model performs better
-    DQN.save_weights(weights_file_name)
-
-    # If it's a DDQN model, update the target network weights using the soft update.
-    # Can be updated using the hard update in update_target_dqn() function in dqn.py for experimentation. 
-    if (ddqn_enable):
-        DQN.soft_update_target_dqn(tau)
-
     # Log the current epoch's information
     log.log_default(epoch, totReward, epsilon, pipes_passed)
 
-    # decrease epsilon and reset the total reward for this epoch
-    epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
-    totReward = 0
+    # Train the model on the current state and the expected values of the action taken (Q values). Get these
+    # vlaues from the getBatch() function then feed it into the model for training.
+    if training:
+        inputs, targets = DQN.getBatch(batchSize, True)
+        if inputs is not None and targets is not None:
+            DQN.model.train_on_batch(inputs, targets)
+
+        # Save the weights whenever the model performs better
+        DQN.save_weights(weights_file_name)
+
+        # If it's a DDQN model, update the target network weights using the soft update.
+        # Can be updated using the hard update in update_target_dqn() function in dqn.py for experimentation. 
+        if (ddqn_enable):
+            DQN.soft_update_target_dqn(tau)
+
+
+        # decrease epsilon and reset the total reward for this epoch
+        epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
+        totReward = 0

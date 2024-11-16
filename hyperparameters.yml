@@ -8,3 +8,4 @@ epsilonMin : 0.05
 hidden_nodes : 64
 ddqn_enable : True
 tau : 0.005
+train: True
