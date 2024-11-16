@@ -140,7 +140,7 @@ class Reward(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.surf = pygame.Surface((3, SCREEN_HEIGHT - GROUND_HEIGHT))
         self.surf.fill((255, 255, 255))
-        self.surf.set_alpha(200)  # Makes it invisible
+        self.surf.set_alpha(0)  # Makes it invisible
           
         self.rect = self.surf.get_rect()
         self.rect[0] = xpos
