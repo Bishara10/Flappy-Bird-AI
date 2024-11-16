@@ -118,19 +118,10 @@ class FlappyBird():
         return state_params
     
     # Advance the game by 1 frame
-    def _handleEvents(self, DQN=None):
+    def _handleEvents(self):
         for event in pygame.event.get():
             if event.type == QUIT:
-                if DQN is not None:
-                    # DQN.save_weights(fname=f"quit{weights_file_name}")
-                    DQN.save_weights(fname=f"quittraining.weights.h5")
                 pygame.quit()
-
-            if event.type == KEYDOWN:
-                if event.key == K_SPACE:
-                    if DQN is not None:
-                        DQN.model.save_weights("model.weights.h5")
-                    self.bird.bump()
 
     # takes one action and advances the game by 1 step (1 frame)
     def step(self, action=None, epoch=-1):

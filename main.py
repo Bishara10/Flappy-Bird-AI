@@ -26,7 +26,6 @@ tau = parameters["tau"]
 # Initialize environment, and the experience replay memory
 DQN = Dqn(hidden_nodes=hidden_nodes, lr=learningRate, maxMemory=maxMemory, discount=gamma)
 weights_file_name = "dqntrain.weights.h5"
-maxReward = -99999
 
 # main loop
 epoch = 0
@@ -42,9 +41,8 @@ log.log_parameters()
 # initialize game environment.
 env = FlappyBird()
 
-
 # Training loop 
-while True:
+while epoch < 50000:
     epoch += 1
 
     # get current game state:
@@ -54,6 +52,7 @@ while True:
     currentState[0] = env.getGameState()
     gotReward = False
     topCollision = False
+    pipes_passed = 0
 
     # Game loop until game is not over
     gameOver = False
@@ -85,6 +84,7 @@ while True:
         #rewards:
         if gotReward:
             reward_this_round = 2.
+            pipes_passed += 1
         elif gameOver:
             reward_this_round = -2.
         else:
@@ -105,9 +105,7 @@ while True:
         DQN.model.train_on_batch(inputs, targets)
 
     # Save the weights whenever the model performs better
-    if (totReward > maxReward):
-            maxReward = totReward
-            DQN.save_weights(weights_file_name)
+    DQN.save_weights(weights_file_name)
 
     # If it's a DDQN model, update the target network weights using the soft update.
     # Can be updated using the hard update in update_target_dqn() function in dqn.py for experimentation. 
@@ -115,7 +113,7 @@ while True:
         DQN.soft_update_target_dqn(tau)
 
     # Log the current epoch's information
-    log.log_default(epoch, totReward, epsilon, totReward)
+    log.log_default(epoch, totReward, epsilon, pipes_passed)
 
     # decrease epsilon and reset the total reward for this epoch
     epsilon = max(epsilon * epsilonDecayRate, epsilonMin)
