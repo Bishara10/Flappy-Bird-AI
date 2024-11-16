@@ -41,12 +41,14 @@ class Dqn():
         currentQValues = self.model(inputs, training=False)
         nextQValues = self.model(nextStates, training=False)
 
+        # if it's a DDQN model, use the best action according to the revised Bellman equation
         if ddqn:
-            bestActions = tf.argmax(nextQValues, axis=1, output_type=tf.int32)  # Ensure int32 for compatibility
+            bestActions = tf.argmax(nextQValues, axis=1, output_type=tf.int32)
             nextQTargetValues = self.target_dqn(nextStates, training=False)
             targetQValues = rewards + (1 - gameOvers) * self.discount * tf.gather_nd(
                 nextQTargetValues, tf.stack([tf.cast(tf.range(batchSize), dtype=tf.int32), bestActions], axis=1)
             )
+        # Otherwise, use the traditional equation
         else:
             targetQValues = rewards + (1 - gameOvers) * self.discount * tf.reduce_max(nextQValues, axis=1)
 
@@ -58,16 +60,19 @@ class Dqn():
         return inputs, targets
     
 
+    # remember new experiences and remove the oldest if the memory is full
     def remember(self, transition, gameOver):
         self.memory.append([transition, gameOver])
         if len(self.memory) > self.maxMemory:
             del self.memory[0]
 
 
+    # Update target DQM weights to match main DQN (hard update)
     def update_target_dqn(self):
         self.target_dqn.set_weights(self.model.get_weights())
 
 
+    # Soft update target DQN weights
     def soft_update_target_dqn(self, tau: float):
         main_network_weights = self.model.get_weights()
         target_network_weights = self.target_dqn.get_weights()

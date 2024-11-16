@@ -1,46 +1,39 @@
-import pygame, random, time
+import pygame, random
 from pygame.locals import *
-from math import log10
+from .flappybird_constants import *
+import os
 
-#VARIABLES
-SCREEN_WIDHT = 400
-SCREEN_HEIGHT = 600
-SPEED = 14
-MAXSPEED = 14
-GRAVITY = 1.9
-GAME_SPEED = 6
-GROUND_WIDHT = 2 * SCREEN_WIDHT
-GROUND_HEIGHT= 60
+#Paths
+current_dir = os.path.dirname(os.path.abspath(__file__))
 
-
-PIPE_WIDHT = 80
-PIPE_HEIGHT = 500
-PIPE_GAP = 130
-
-SCORE = 0
-
-wing = 'assets/audio/wing.wav'
-hit = 'assets/audio/hit.wav'
-point = 'assets/audio/point.wav'
+wing_path = os.path.join(current_dir,"assets", "audio", "wing.wav")
+hit_path = os.path.join(current_dir,"assets", "audio", "hit.wav")
+point_path = os.path.join(current_dir,"assets", "audio", "point.wav")
+font_path = os.path.join(current_dir,"assets", "flappy-bird-font.ttf")
+bird_upflap_path = os.path.join(current_dir,"assets", "sprites", "yellowbird-upflap.png")
+bird_midflap_path = os.path.join(current_dir,"assets", "sprites", "yellowbird-midflap.png")
+bird_downflap_path = os.path.join(current_dir,"assets", "sprites", "yellowbird-downflap.png")
+pipe_green_path = os.path.join(current_dir,"assets", "sprites", "pipe-green.png")
+base_path = os.path.join(current_dir,"assets", "sprites", "base.png")
 
 pygame.init()
 pygame.mixer.init()
 pygame.font.init()
-font = pygame.font.Font("./assets/flappy-bird-font.ttf", 42)
-font2 = pygame.font.Font("./assets/flappy-bird-font.ttf", 28)
+font = pygame.font.Font(font_path, 42)
+font2 = pygame.font.Font(font_path, 28)
 
-wing_sound = pygame.mixer.Sound(wing)
-hit_sound = pygame.mixer.Sound(hit)
-point_sound = pygame.mixer.Sound(point)
+wing_sound = pygame.mixer.Sound(wing_path)
+hit_sound = pygame.mixer.Sound(hit_path)
+point_sound = pygame.mixer.Sound(point_path)
 
 class Bird(pygame.sprite.Sprite):
 
     def __init__(self):
         pygame.sprite.Sprite.__init__(self)
 
-        self.images =  [pygame.image.load('assets/sprites/yellowbird-upflap.png').convert_alpha(),
-                        pygame.image.load('assets/sprites/yellowbird-midflap.png').convert_alpha(),
-                        pygame.image.load('assets/sprites/yellowbird-downflap.png').convert_alpha()]
+        self.images =  [pygame.image.load(bird_upflap_path).convert_alpha(),
+                        pygame.image.load(bird_midflap_path).convert_alpha(),
+                        pygame.image.load(bird_downflap_path).convert_alpha()]
 
         self.speed = SPEED
 
@@ -94,7 +87,7 @@ class Pipe(pygame.sprite.Sprite):
     def __init__(self, inverted, xpos, ysize):
         pygame.sprite.Sprite.__init__(self)
 
-        self.image = pygame.image.load('assets/sprites/pipe-green.png').convert_alpha()
+        self.image = pygame.image.load(pipe_green_path).convert_alpha()
         self.image = pygame.transform.scale(self.image, (PIPE_WIDHT, PIPE_HEIGHT))
 
 
@@ -115,16 +108,16 @@ class Pipe(pygame.sprite.Sprite):
         self.rect[0] -= GAME_SPEED
 
 
-class Score():
-    def __init__(self):
-        self.score = 0
-        self.pos = (SCREEN_WIDHT // 2 - font.get_height() // 2, SCREEN_HEIGHT//20)
+# class Score():
+#     def __init__(self):
+#         self.score = 0
+#         self.pos = (SCREEN_WIDHT // 2 - font.get_height() // 2, SCREEN_HEIGHT//20)
 
 
-    def update(self, new_val):
-        self.score = new_val
-        score_disp = font.render(str(new_val), True, (255, 255, 255))
-        return score_disp
+#     def update(self, new_val):
+#         self.score = new_val
+#         score_disp = font.render(str(new_val), True, (255, 255, 255))
+#         return score_disp
     
 
 class TopBoundary(pygame.sprite.Sprite):
@@ -147,7 +140,7 @@ class Reward(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.surf = pygame.Surface((3, SCREEN_HEIGHT - GROUND_HEIGHT))
         self.surf.fill((255, 255, 255))
-        self.surf.set_alpha(0)  # Makes it invisible
+        self.surf.set_alpha(200)  # Makes it invisible
           
         self.rect = self.surf.get_rect()
         self.rect[0] = xpos
@@ -172,7 +165,7 @@ class Reward(pygame.sprite.Sprite):
 class Ground(pygame.sprite.Sprite):
     def __init__(self, xpos):
         pygame.sprite.Sprite.__init__(self)
-        self.image = pygame.image.load('assets/sprites/base.png').convert_alpha()
+        self.image = pygame.image.load(base_path).convert_alpha()
         self.image = pygame.transform.scale(self.image, (GROUND_WIDHT, GROUND_HEIGHT))
 
         self.mask = pygame.mask.from_surface(self.image)
@@ -189,6 +182,7 @@ def is_off_screen(sprite):
     return sprite.rect[0] < -(sprite.rect[2])
 
 
+# will be implemented in flappybird.py
 def get_random_pipes(xpos):
     size = random.randint(100, 350)
 

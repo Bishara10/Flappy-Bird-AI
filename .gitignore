@@ -3,8 +3,8 @@ log.txt
 tests
 __pycache__
 .idea
-logs
 idk
 figures
 *.weights.h5
 main_copy.py
+logs/log*
