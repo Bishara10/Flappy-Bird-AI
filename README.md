@@ -61,8 +61,8 @@ The model is optimized using the following hyperparameters:
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/Flappy-Bird-AI-DDQN.git
-   cd Flappy-Bird-AI-DDQN
+   git clone https://github.com/Bishara10/Flappy-Bird-AI.git
+   cd Flappy-Bird-AI
    ```
 
 2. Install the required dependencies:
