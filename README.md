@@ -50,14 +50,15 @@ The model is a simple neural network designed for the agent's decision-making:
     - **Output Layer**: Outputs Q-values for two possible actions: `jump` and `no action`.
 
 The model is optimized using the following hyperparameters:
-    - **Learning Rate**: `0.0001`
+    - **Learning Rate**: `0.0005`
     - **Discount Factor (gamma)**: `0.95`
     - **Batch Size**: `32`
     - **Memory Size**: `100000`
-    - **Epsilon Decay Rate**: `0.998`
+    - **Epsilon Decay Rate**: `0.9999`
     - **Minimum Epsilon**: `0.05`
+    - **tau**: `0.005`
 
-## Installation
+## Installation and Usage
 
 1. Clone the repository:
    ```bash
@@ -72,9 +73,7 @@ The model is optimized using the following hyperparameters:
 
 3. Run the game and train the model:
     ```bash
-    Copy code
-    python train.py
+    python main.py
     ```
-
-
-The code is still being updated for readability and simplicity, as well as organizing modules.
+Model weights are saved every epoch. 
+For testing the model, change **train** to `False` in hyperparameters.yml. This way, the model will load the weights file and predict only. 

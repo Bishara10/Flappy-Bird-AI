@@ -35,9 +35,24 @@ currentState = np.zeros((1, 5))
 nextState = currentState
 totReward = 0
 
+
 # Create a new log file and log the parameters
-log = Log()
-log.log_parameters()
+log_file = f"./logs/log{datetime.now().strftime('%m-%d--%H-%M')}.txt"
+def log_default(epoch, totReward, epsilon, score, mode="+a"):
+        with open(log_file, mode) as log:
+            log.write(f"{datetime.now()}: epoch: {epoch} | totalReward = {totReward} | epsilon = {epsilon} | pipes passed = {score}\n")
+
+def log_parameters(mode="a"):
+    with open("hyperparameters.yml", "r") as parameters_file:
+        parameters = yaml.safe_load(parameters_file)
+
+    with open(log_file, mode) as f:
+        for key, value in parameters.items():
+            f.write(f"{key}: {value}\n")
+    
+        f.write("\n")
+
+log_parameters()
 
 
 # initialize game environment.
@@ -103,7 +118,7 @@ while epoch < 50000:
         # print(state_params, totReward)
 
     # Log the current epoch's information
-    log.log_default(epoch, totReward, epsilon, pipes_passed)
+    log_default(epoch, totReward, epsilon, pipes_passed)
 
     # Train the model on the current state and the expected values of the action taken (Q values). Get these
     # vlaues from the getBatch() function then feed it into the model for training.
