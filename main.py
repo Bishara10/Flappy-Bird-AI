@@ -2,6 +2,8 @@ from flappybirdenv.flappybird import FlappyBird
 from dqn import Dqn
 import numpy as np
 import keras
+import yaml
+from datetime import datetime
 keras.utils.disable_interactive_logging()
 
 # load hyperparameters
