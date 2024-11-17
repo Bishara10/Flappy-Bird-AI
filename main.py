@@ -1,6 +1,4 @@
-from components.misc import *
 from flappybirdenv.flappybird import FlappyBird
-
 from dqn import Dqn
 import numpy as np
 import keras
