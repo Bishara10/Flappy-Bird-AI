@@ -8,7 +8,7 @@ This project is an AI agent designed to play the game **Flappy Bird** autonomous
   - [Double Deep Q-Network (DDQN)](#double-deep-q-network-ddqn)
   - [Epsilon-Greedy Strategy](#epsilon-greedy-strategy)
 - [Model Architecture](#model-architecture)
-- [Installation & Usage](#installation-and-usage)
+- [Installation & Usage](#installation-&-usage)
 
 ## Introduction
 
