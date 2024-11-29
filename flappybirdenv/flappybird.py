@@ -4,6 +4,7 @@ from .AllComponents import *
 from .flappybird_constants import *
 
 
+
 class FlappyBird():
     def __init__(self):
         #initialize pygame resources
@@ -35,7 +36,7 @@ class FlappyBird():
         # initialize bird and add it to the bird group
         self.bird = Bird()
         self.bird_group.add(self.bird)
-        # spawn bird at the left hand side of the screen at a predefined height
+        # spawn bird on the left hand side of the screen at a predefined height
         self.bird.begin()
 
         # initialize ground sprites
@@ -79,12 +80,14 @@ class FlappyBird():
         # empty groups
         self.pipe_group.empty()
         self.reward_group.empty()
+
         # spawn new pipes
         self._spawnFirstPipes()
         # reset bird's position
         self.bird.begin()
         #reset score
         self.score = 0
+
 
     # returns the current game state
     def getGameState(self):
@@ -131,8 +134,7 @@ class FlappyBird():
 
         # render epoch if necessary and the score
         display_score = font.render(str(self.score), True, (255, 255, 255))
-        if epoch != -1:
-            display_epoch = font2.render(f"epoch: {epoch}", True, (255, 255, 255))
+        display_epoch = font2.render(f"epoch: {epoch}", True, (255, 255, 255))
 
         # handle user events
         self._handleEvents()
@@ -141,11 +143,11 @@ class FlappyBird():
         if action == 1:
             self.bird.bump()
 
-        elif action == None:
+        elif action is None:
             raise Exception("no action")
 
 
-        # chec if the ground sprite is off screen and update it
+        # check if the ground sprite is off screen and update it
         if is_off_screen(self.ground_group.sprites()[0]):
             self.ground_group.remove(self.ground_group.sprites()[0])
 

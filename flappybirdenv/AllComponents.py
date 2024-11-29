@@ -1,5 +1,4 @@
 import pygame, random
-from pygame.locals import *
 from .flappybird_constants import *
 import os
 
@@ -29,7 +28,7 @@ point_sound = pygame.mixer.Sound(point_path)
 class Bird(pygame.sprite.Sprite):
 
     def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
 
         self.images =  [pygame.image.load(bird_upflap_path).convert_alpha(),
                         pygame.image.load(bird_midflap_path).convert_alpha(),
@@ -85,7 +84,7 @@ class Bird(pygame.sprite.Sprite):
 class Pipe(pygame.sprite.Sprite):
 
     def __init__(self, inverted, xpos, ysize):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
 
         self.image = pygame.image.load(pipe_green_path).convert_alpha()
         self.image = pygame.transform.scale(self.image, (PIPE_WIDHT, PIPE_HEIGHT))
@@ -122,7 +121,7 @@ class Pipe(pygame.sprite.Sprite):
 
 class TopBoundary(pygame.sprite.Sprite):
     def __init__(self):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
         self.surf = pygame.Surface((SCREEN_WIDHT, 1))
         self.surf.fill((255, 255, 255))
         self.surf.set_alpha(0)
@@ -137,7 +136,7 @@ class TopBoundary(pygame.sprite.Sprite):
 
 class Reward(pygame.sprite.Sprite):
     def __init__(self, xpos):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
         self.surf = pygame.Surface((3, SCREEN_HEIGHT - GROUND_HEIGHT))
         self.surf.fill((255, 255, 255))
         self.surf.set_alpha(0)  # Makes it invisible
@@ -164,7 +163,7 @@ class Reward(pygame.sprite.Sprite):
 
 class Ground(pygame.sprite.Sprite):
     def __init__(self, xpos):
-        pygame.sprite.Sprite.__init__(self)
+        super().__init__()
         self.image = pygame.image.load(base_path).convert_alpha()
         self.image = pygame.transform.scale(self.image, (GROUND_WIDHT, GROUND_HEIGHT))
 

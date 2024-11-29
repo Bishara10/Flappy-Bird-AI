@@ -1,7 +1,9 @@
+from random import sample
 import numpy as np
 import tensorflow as tf
 from brain import Brain
 import keras
+import numpy
 keras.utils.disable_interactive_logging()
 
 class Dqn():
@@ -9,21 +11,24 @@ class Dqn():
         self.maxMemory = maxMemory
         self.discount = discount
         self.memory = list()
-        
 
         self.model = Brain(hidden_nodes, 5, 2, lr).model
         self.target_dqn = Brain(hidden_nodes, 5, 2, lr).model
+        self.loss_fn = keras.losses.MeanSquaredError()
+        self.optimizer = keras.optimizers.AdamW(learning_rate=lr, amsgrad=True)
         self.update_target_dqn()
 
-
     # Getting batches of inputs and targets
-    @tf.function
     def getBatch(self, batchSize, ddqn=False):
         if len(self.memory) < batchSize:
             return None, None
 
         # Randomly sample batch indices
         indices = np.random.randint(0, len(self.memory), size=batchSize)
+        # batch = sample(self.memory, batchSize)
+        # transitions, gameOvers = zip(*batch)
+        #
+        # currentState, actions, rewards, nextStates = zip(*transitions)
 
         # Extract data and convert to tensors
         inputs = tf.convert_to_tensor([tf.squeeze(self.memory[idx][0][0]) for idx in indices], dtype=tf.float32)
@@ -32,10 +37,10 @@ class Dqn():
         nextStates = tf.convert_to_tensor([tf.squeeze(self.memory[idx][0][3]) for idx in indices], dtype=tf.float32)
         gameOvers = tf.convert_to_tensor([self.memory[idx][1] for idx in indices], dtype=tf.float32)
 
-        # Reshape inputs and nextStates according to model's input shape
-        expected_shape = self.model.input_shape[1:]
-        inputs = tf.reshape(inputs, (batchSize,) + expected_shape)
-        nextStates = tf.reshape(nextStates, (batchSize,) + expected_shape)
+        # # Reshape inputs and nextStates according to model's input shape
+        # expected_shape = self.model.input_shape[1:]
+        # inputs = tf.reshape(inputs, (batchSize,) + expected_shape)
+        # nextStates = tf.reshape(nextStates, (batchSize,) + expected_shape)
 
         # Batch predictions for inputs and nextStates
         currentQValues = self.model(inputs, training=False)
@@ -58,19 +63,30 @@ class Dqn():
         targets = tf.tensor_scatter_nd_update(targets, indices, targetQValues)
 
         return inputs, targets
-    
+
+
+    # @tf.function
+    # def train_batch(self, inputs, targets):
+    #     self.model.train_on_batch(inputs.nmpy(), targets.numpy())
+
+    @tf.function
+    def train_batch(self, inputs, targets):
+        with tf.GradientTape() as tape:
+            predictions = self.model(inputs, training=True)
+            loss = self.loss_fn(targets, predictions)
+        gradients = tape.gradient(loss, self.model.trainable_variables)
+        self.optimizer.apply_gradients(zip(gradients, self.model.trainable_variables))
 
     # remember new experiences and remove the oldest if the memory is full
     def remember(self, transition, gameOver):
         self.memory.append([transition, gameOver])
         if len(self.memory) > self.maxMemory:
-            del self.memory[0]
-
+            # del self.memory[0]
+            self.memory.pop(0)
 
     # Update target DQM weights to match main DQN (hard update)
     def update_target_dqn(self):
         self.target_dqn.set_weights(self.model.get_weights())
-
 
     # Soft update target DQN weights
     def soft_update_target_dqn(self, tau: float):
