@@ -8,7 +8,7 @@ This project is an AI agent designed to play the game **Flappy Bird** autonomous
   - [Double Deep Q-Network (DDQN)](#double-deep-q-network-ddqn)
   - [Epsilon-Greedy Strategy](#epsilon-greedy-strategy)
 - [Model Architecture](#model-architecture)
-- [Installation](#installation)
+- [Installation & Usage](#installation-and-usage)
 
 ## Introduction
 
@@ -58,7 +58,7 @@ The model is optimized using the following hyperparameters:
     - **Minimum Epsilon**: `0.05`
     - **tau**: `0.005`
 
-## Installation and Usage
+## Installation & Usage
 
 1. Clone the repository:
    ```bash
